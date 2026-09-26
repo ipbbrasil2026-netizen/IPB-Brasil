@@ -113,16 +113,19 @@
     margin-bottom:18px;
   }
   .table-head h2{font-size:1.5rem;}
-  input#search{
+  input#search, select#filterSituacao, select#filterFaixa{
     font-family:'IBM Plex Sans', sans-serif;
     font-size:0.95rem;
     padding:9px 14px;
     border:1px solid var(--line);
     background:var(--paper-raise);
     border-radius:2px;
-    min-width:220px;
+    color:var(--ink);
   }
-  input#search:focus{outline:2px solid var(--navy);outline-offset:1px;}
+  input#search{min-width:220px;}
+  input#search:focus, select#filterSituacao:focus, select#filterFaixa:focus{
+    outline:2px solid var(--navy);outline-offset:1px;
+  }
   .table-scroll{
     overflow-x:auto;
     border:1px solid var(--line);
@@ -222,6 +225,33 @@
         </ul>
       </div>
     </div>
+
+    <div class="divider" style="margin:36px 0;"></div>
+
+    <div class="grid">
+      <div>
+        <h2>Cobertura do levantamento</h2>
+        <p>Quantos sínodos entraram na planilha e quantos ainda não têm total documental — recalculado a cada atualização.</p>
+      </div>
+      <div>
+        <div class="stat-grid" style="border:1px solid var(--line);">
+          <div class="stat-card">
+            <div class="num" id="covPrevistos">—</div>
+            <div class="label">Sínodos na planilha</div>
+          </div>
+          <div class="stat-card">
+            <div class="num" id="covComTotal">—</div>
+            <div class="label">Com total documental</div>
+          </div>
+          <div class="stat-card">
+            <div class="num" id="covSemTotal">—</div>
+            <div class="label">Sem total computável</div>
+          </div>
+        </div>
+        <p style="margin-top:16px;margin-bottom:6px;color:var(--muted);font-size:0.9rem;">Sínodos sem total computável:</p>
+        <ul id="semDadoList" style="margin:0;padding-left:18px;color:#3c3830;"></ul>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -231,7 +261,22 @@
   <div class="wrap">
     <div class="table-head">
       <h2>Membros por sínodo</h2>
-      <input id="search" type="text" placeholder="Buscar sínodo ou sigla…">
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <select id="filterSituacao">
+          <option value="todos">Todas as situações</option>
+          <option value="ok">Com total</option>
+          <option value="sip">Total sem divisão</option>
+          <option value="no-data">Sem dado computável</option>
+        </select>
+        <select id="filterFaixa">
+          <option value="todas">Qualquer tamanho</option>
+          <option value="ate1000">Até 1.000 membros</option>
+          <option value="1000-5000">1.001 a 5.000</option>
+          <option value="5000-10000">5.001 a 10.000</option>
+          <option value="acima10000">Acima de 10.000</option>
+        </select>
+        <input id="search" type="text" placeholder="Buscar sínodo ou sigla…">
+      </div>
     </div>
     <div class="table-scroll">
       <table>
@@ -293,10 +338,30 @@ let rows = [];
 let sortKey = "rolAtual";
 let sortDir = 1;
 
+function situacaoKey(r){
+  if (r.rolAtual === null) return "no-data";
+  if (r.comungantes === null && r.naoComungantes === null) return "sip";
+  return "ok";
+}
+
+function faixaMatch(r, faixa){
+  if (faixa === "todas" || r.rolAtual === null) return faixa === "todas";
+  if (faixa === "ate1000") return r.rolAtual <= 1000;
+  if (faixa === "1000-5000") return r.rolAtual > 1000 && r.rolAtual <= 5000;
+  if (faixa === "5000-10000") return r.rolAtual > 5000 && r.rolAtual <= 10000;
+  if (faixa === "acima10000") return r.rolAtual > 10000;
+  return true;
+}
+
 function render(){
   const q = document.getElementById("search").value.trim().toLowerCase();
+  const situacao = document.getElementById("filterSituacao").value;
+  const faixa = document.getElementById("filterFaixa").value;
+
   let list = rows.filter(r =>
-    r.sinodo.toLowerCase().includes(q) || r.sigla.toLowerCase().includes(q)
+    (r.sinodo.toLowerCase().includes(q) || r.sigla.toLowerCase().includes(q)) &&
+    (situacao === "todos" || situacaoKey(r) === situacao) &&
+    faixaMatch(r, faixa)
   );
 
   list.sort((a,b) => {
@@ -312,14 +377,12 @@ function render(){
   body.innerHTML = "";
   list.forEach((r, i) => {
     const tr = document.createElement("tr");
-    let badge;
-    if (r.rolAtual === null) {
-      badge = '<span class="badge no-data">Sem dado computável</span>';
-    } else if (r.comungantes === null && r.naoComungantes === null) {
-      badge = '<span class="badge sip">Total sem divisão</span>';
-    } else {
-      badge = '<span class="badge ok">Com total</span>';
-    }
+    const sk = situacaoKey(r);
+    const badge = sk === "no-data"
+      ? '<span class="badge no-data">Sem dado computável</span>'
+      : sk === "sip"
+        ? '<span class="badge sip">Total sem divisão</span>'
+        : '<span class="badge ok">Com total</span>';
     tr.innerHTML = `
       <td>${r.rolAtual !== null ? i + 1 : "-"}</td>
       <td>${r.sinodo}</td>
@@ -345,6 +408,8 @@ document.querySelectorAll("thead th[data-key]").forEach(th => {
 });
 
 document.getElementById("search").addEventListener("input", render);
+document.getElementById("filterSituacao").addEventListener("change", render);
+document.getElementById("filterFaixa").addEventListener("change", render);
 
 function loadData(){
   if (!SHEET_CSV_URL || SHEET_CSV_URL.indexOf("COLE_AQUI") !== -1) {
@@ -380,6 +445,22 @@ function loadData(){
       document.getElementById("statNaoComungantes").textContent = fmt(totalNaoComungantes);
       document.getElementById("statComTotal").textContent = comTotal.length;
       document.getElementById("statSemTotal").textContent = semTotal.length;
+
+      document.getElementById("covPrevistos").textContent = rows.length;
+      document.getElementById("covComTotal").textContent = comTotal.length;
+      document.getElementById("covSemTotal").textContent = semTotal.length;
+
+      const semDadoList = document.getElementById("semDadoList");
+      semDadoList.innerHTML = "";
+      if (semTotal.length === 0) {
+        semDadoList.innerHTML = "<li>Nenhum — todos os sínodos da planilha têm total documental.</li>";
+      } else {
+        semTotal.forEach(r => {
+          const li = document.createElement("li");
+          li.textContent = `${r.sinodo} (${r.sigla})`;
+          semDadoList.appendChild(li);
+        });
+      }
 
       render();
     },
