@@ -224,16 +224,14 @@
   .toolbar select:focus, .toolbar input:focus{outline:2px solid var(--navy);outline-offset:1px;}
 
   .table-scroll{
-    overflow-x:auto;
     border:1px solid var(--line);border-top:none;
     background:var(--paper-raise);
-    max-height:640px;
   }
-  table{width:100%;border-collapse:collapse;font-size:0.92rem;min-width:680px;}
+  table{width:100%;border-collapse:collapse;font-size:0.92rem;}
   thead th{
     text-align:left;padding:13px 14px;
     background:var(--navy);color:#f2efe6;font-weight:500;
-    position:sticky;top:0;cursor:pointer;user-select:none;white-space:nowrap;
+    cursor:pointer;user-select:none;white-space:nowrap;
   }
   thead th .sort-ind{color:var(--gold);margin-left:5px;font-size:0.75rem;}
   thead th.num, td.num{text-align:right;font-variant-numeric:tabular-nums;}
