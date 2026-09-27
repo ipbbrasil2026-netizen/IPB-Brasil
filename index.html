@@ -521,6 +521,7 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.5.0/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.2.0/chartjs-plugin-datalabels.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <script>
@@ -577,6 +578,14 @@ function renderRegional(comTotal){
 
 const CHART_COLORS = ["#c89b3c","#3c7268","#1f3a52","#b15a43","#8a7ab5","#6d6656"];
 
+let DATALABELS_OK = false;
+try {
+  Chart.register(ChartDataLabels);
+  DATALABELS_OK = true;
+} catch (e) {
+  console.warn("Plugin de rótulos de dados não carregou:", e);
+}
+
 function renderCharts(comTotal, totalComungantes, totalNaoComungantes){
   const { ordered } = computeRegionTotals(comTotal);
 
@@ -592,7 +601,15 @@ function renderCharts(comTotal, totalComungantes, totalNaoComungantes){
     },
     options: {
       responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
+      layout: { padding: { top: 22 } },
+      plugins: {
+        legend: { display: false },
+        datalabels: DATALABELS_OK ? {
+          anchor: "end", align: "top",
+          color: "#122029", font: { weight: "600", size: 11 },
+          formatter: v => v.toLocaleString("pt-BR")
+        } : false
+      },
       scales: { y: { ticks: { callback: v => v.toLocaleString("pt-BR") } } }
     }
   });
@@ -608,7 +625,17 @@ function renderCharts(comTotal, totalComungantes, totalNaoComungantes){
     },
     options: {
       responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { position: "bottom" } }
+      plugins: {
+        legend: { position: "bottom" },
+        datalabels: DATALABELS_OK ? {
+          color: "#fff", font: { weight: "600", size: 12 },
+          formatter: (v, ctx) => {
+            const total = ctx.chart.data.datasets[0].data.reduce((a,b) => a+b, 0);
+            const pct = total > 0 ? (v/total*100).toFixed(1) : "0.0";
+            return v.toLocaleString("pt-BR") + "\n" + pct + "%";
+          }
+        } : false
+      }
     }
   });
 
@@ -626,7 +653,15 @@ function renderCharts(comTotal, totalComungantes, totalNaoComungantes){
     options: {
       indexAxis: "y",
       responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
+      layout: { padding: { right: 46 } },
+      plugins: {
+        legend: { display: false },
+        datalabels: DATALABELS_OK ? {
+          anchor: "end", align: "right",
+          color: "#122029", font: { weight: "600", size: 11 },
+          formatter: v => v.toLocaleString("pt-BR")
+        } : false
+      },
       scales: { x: { ticks: { callback: v => v.toLocaleString("pt-BR") } } }
     }
   });
