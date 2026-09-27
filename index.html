@@ -239,6 +239,27 @@
   .badge.sip{background:#f3ecd9;color:var(--gold);}
   #status{color:var(--muted);font-size:0.87rem;margin-top:14px;}
 
+  .pagination{
+    display:flex;align-items:center;gap:6px;flex-wrap:wrap;
+    margin-top:14px;
+  }
+  .pagination button{
+    font-family:'IBM Plex Sans',sans-serif;
+    font-size:0.87rem;
+    min-width:34px;height:34px;padding:0 10px;
+    border:1px solid var(--line);
+    background:var(--paper-raise);
+    color:var(--ink);
+    border-radius:3px;
+    cursor:pointer;
+  }
+  .pagination button:hover:not(:disabled){border-color:var(--navy);}
+  .pagination button:disabled{opacity:0.4;cursor:default;}
+  .pagination button.active{
+    background:var(--navy);color:#fff;border-color:var(--navy);
+  }
+  .pagination .pg-gap{color:var(--muted);padding:0 4px;}
+
   .disclaimer-bar{
     background:#5a2e22;color:#f6e6de;
     font-size:0.85rem;text-align:center;
@@ -425,6 +446,7 @@
       </table>
     </div>
     <p id="status"></p>
+    <div class="pagination" id="pagination"></div>
   </div>
 </section>
 
@@ -508,6 +530,8 @@ function fmt(n){
 let rows = [];
 let sortKey = "rolAtual";
 let sortDir = 1;
+let currentPage = 1;
+const PAGE_SIZE = 15;
 
 function situacaoKey(r){
   if (r.rolAtual === null) return "no-data";
@@ -558,9 +582,22 @@ function render(){
     return String(av).localeCompare(String(bv), "pt-BR") * sortDir;
   });
 
+  const totalItems = list.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / PAGE_SIZE));
+  if (currentPage > totalPages) currentPage = totalPages;
+  if (currentPage < 1) currentPage = 1;
+  const startIdx = (currentPage - 1) * PAGE_SIZE;
+  const pageItems = list.slice(startIdx, startIdx + PAGE_SIZE);
+
   const body = document.getElementById("tableBody");
   body.innerHTML = "";
-  list.forEach((r, i) => {
+
+  if (totalItems === 0) {
+    body.innerHTML = '<tr><td colspan="7">Nenhum sínodo encontrado com os filtros atuais.</td></tr>';
+  }
+
+  pageItems.forEach((r, i) => {
+    const globalIdx = startIdx + i;
     const tr = document.createElement("tr");
     const sk = situacaoKey(r);
     const badge = sk === "no-data"
@@ -569,7 +606,7 @@ function render(){
         ? '<span class="badge sip">Total sem divisão</span>'
         : '<span class="badge ok">Com total</span>';
     tr.innerHTML = `
-      <td>${r.rolAtual !== null ? i + 1 : "-"}</td>
+      <td>${r.rolAtual !== null ? globalIdx + 1 : "-"}</td>
       <td>${r.sinodo}</td>
       <td>${r.sigla}</td>
       <td class="num">${fmt(r.comungantes)}</td>
@@ -580,23 +617,67 @@ function render(){
     body.appendChild(tr);
   });
 
-  document.getElementById("status").textContent =
-    `${list.length} sínodo(s) exibido(s) de ${rows.length} no total.`;
+  document.getElementById("status").textContent = totalItems === 0
+    ? `0 sínodo(s) exibido(s) de ${rows.length} no total.`
+    : `Mostrando ${startIdx + 1}–${Math.min(startIdx + PAGE_SIZE, totalItems)} de ${totalItems} sínodo(s) (${rows.length} no total).`;
 
+  renderPagination(totalPages);
   updateSortIndicators();
+}
+
+function goToPage(p){
+  currentPage = p;
+  render();
+}
+
+function renderPagination(totalPages){
+  const box = document.getElementById("pagination");
+  box.innerHTML = "";
+  if (totalPages <= 1) return;
+
+  const mkBtn = (label, page, opts = {}) => {
+    const b = document.createElement("button");
+    b.textContent = label;
+    if (opts.active) b.classList.add("active");
+    if (opts.disabled) b.disabled = true;
+    else b.addEventListener("click", () => goToPage(page));
+    return b;
+  };
+
+  box.appendChild(mkBtn("‹", currentPage - 1, { disabled: currentPage === 1 }));
+
+  const pages = [];
+  for (let p = 1; p <= totalPages; p++) {
+    if (p === 1 || p === totalPages || Math.abs(p - currentPage) <= 1) pages.push(p);
+  }
+  let last = 0;
+  pages.forEach(p => {
+    if (p - last > 1) {
+      const gap = document.createElement("span");
+      gap.className = "pg-gap";
+      gap.textContent = "…";
+      box.appendChild(gap);
+    }
+    box.appendChild(mkBtn(String(p), p, { active: p === currentPage }));
+    last = p;
+  });
+
+  box.appendChild(mkBtn("›", currentPage + 1, { disabled: currentPage === totalPages }));
 }
 
 document.querySelectorAll("thead th[data-key]").forEach(th => {
   th.addEventListener("click", () => {
     const key = th.dataset.key;
     if (key === sortKey) { sortDir *= -1; } else { sortKey = key; sortDir = 1; }
+    currentPage = 1;
     render();
   });
 });
 
-document.getElementById("search").addEventListener("input", render);
-document.getElementById("filterSituacao").addEventListener("change", render);
-document.getElementById("filterFaixa").addEventListener("change", render);
+function resetPageAndRender(){ currentPage = 1; render(); }
+document.getElementById("search").addEventListener("input", resetPageAndRender);
+document.getElementById("filterSituacao").addEventListener("change", resetPageAndRender);
+document.getElementById("filterFaixa").addEventListener("change", resetPageAndRender);
 
 function loadData(){
   if (!SHEET_CSV_URL || SHEET_CSV_URL.indexOf("COLE_AQUI") !== -1) {
