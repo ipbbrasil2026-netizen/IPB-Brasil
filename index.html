@@ -495,7 +495,7 @@ function loadData(){
           naoComungantes: toNumber(r[COL.naoComungantes]),
           rolAtual: toNumber(r[COL.rolAtual])
         }))
-        .filter(r => r.sinodo !== "");
+        .filter(r => r.sinodo !== "" && r.sinodo.trim().toUpperCase() !== "TOTAL");
 
       const comTotal = rows.filter(r => r.rolAtual !== null);
       const semTotal = rows.filter(r => r.rolAtual === null);
