@@ -3,29 +3,32 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Estatística IPB — Rol de Membros por Sínodo</title>
+<title>Estatística IPB (não oficial) — Rol de Membros por Sínodo</title>
+<meta name="description" content="Levantamento não oficial e independente do rol de membros da IPB por sínodo. Sem vínculo institucional com a Igreja Presbiteriana do Brasil.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root{
     --ink:#1c2b33;
     --navy:#1f3a52;
-    --navy-deep:#142633;
-    --paper:#f7f5ef;
+    --navy-deep:#122029;
+    --paper:#f7f4ec;
     --paper-raise:#ffffff;
-    --gold:#b8863f;
-    --line:#dcd6c8;
-    --muted:#6b6558;
-    --sem-dado:#a34a3f;
+    --gold:#c89b3c;
+    --teal:#3c7268;
+    --terracotta:#b15a43;
+    --line:#e2dbc9;
+    --muted:#6d6656;
   }
   *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
   html,body{margin:0;padding:0;}
   body{
     background:var(--paper);
     color:var(--ink);
     font-family:'IBM Plex Sans', sans-serif;
-    line-height:1.5;
+    line-height:1.55;
   }
   h1,h2,h3{
     font-family:'Fraunces', serif;
@@ -33,235 +36,278 @@
     margin:0;
     color:var(--navy-deep);
   }
-  a{color:var(--navy);}
-  .wrap{max-width:980px;margin:0 auto;padding:0 24px;}
+  .wrap{max-width:1040px;margin:0 auto;padding:0 28px;}
+
+  /* NAV */
+  nav.topnav{
+    position:sticky;top:0;z-index:20;
+    background:rgba(247,244,236,0.92);
+    backdrop-filter:blur(6px);
+    border-bottom:1px solid var(--line);
+  }
+  nav.topnav .wrap{
+    display:flex;align-items:center;justify-content:space-between;
+    height:56px;
+  }
+  nav.topnav .brand{font-family:'Fraunces',serif;font-weight:600;font-size:1rem;color:var(--navy-deep);}
+  nav.topnav .links{display:flex;gap:22px;}
+  nav.topnav a{
+    color:var(--muted);text-decoration:none;font-size:0.9rem;
+    border-bottom:2px solid transparent;padding-bottom:4px;
+  }
+  nav.topnav a:hover{color:var(--navy-deep);border-color:var(--gold);}
 
   /* HERO */
   header.hero{
-    background:var(--navy);
+    background:
+      radial-gradient(circle at 84% -10%, rgba(200,155,60,0.20), transparent 45%),
+      var(--navy-deep);
     color:#f2efe6;
-    padding:64px 0 56px;
+    padding:76px 0 0;
+    overflow:hidden;
   }
-  header.hero .wrap{display:flex;flex-direction:column;gap:18px;}
+  header.hero .wrap{display:flex;flex-direction:column;gap:16px;padding-bottom:52px;}
   header.hero .kicker{
     font-size:0.95rem;
     color:#c9b98a;
-    max-width:34ch;
+    max-width:38ch;
   }
   header.hero h1{
     color:#fff;
-    font-size:clamp(2.4rem, 6vw, 3.6rem);
-    line-height:1.05;
+    font-size:clamp(2.8rem, 7vw, 4.6rem);
+    line-height:1;
     letter-spacing:-0.01em;
-  }
-  header.hero .total-num{
     font-variant-numeric:tabular-nums;
   }
   header.hero p.lede{
-    max-width:52ch;
-    color:#d9d3c2;
+    max-width:54ch;
+    color:#cfc8b4;
     font-size:1.05rem;
   }
-
-  /* STATS */
-  section.stats{padding:40px 0 8px;}
-  .stat-grid{
-    display:grid;
-    grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));
-    gap:1px;
-    background:var(--line);
-    border:1px solid var(--line);
+  .metric-row{
+    display:flex;gap:1px;background:rgba(255,255,255,0.12);
+    border:1px solid rgba(255,255,255,0.12);
+    margin-top:8px;
+    flex-wrap:wrap;
   }
-  .stat-card{
-    background:var(--paper-raise);
-    padding:22px 20px;
+  .metric-pill{
+    flex:1 1 160px;
+    background:rgba(20,32,40,0.55);
+    padding:18px 20px;
+    border-top:3px solid var(--gold);
   }
-  .stat-card .num{
-    font-family:'Fraunces', serif;
-    font-size:2.1rem;
-    font-weight:600;
-    color:var(--navy-deep);
+  .metric-pill:nth-child(2){border-top-color:var(--teal);}
+  .metric-pill:nth-child(3){border-top-color:var(--terracotta);}
+  .metric-pill .num{
+    font-family:'Fraunces',serif;font-size:1.7rem;font-weight:600;color:#fff;
     font-variant-numeric:tabular-nums;
   }
-  .stat-card .label{
-    color:var(--muted);
-    font-size:0.9rem;
-    margin-top:4px;
-  }
+  .metric-pill .label{color:#b9b09a;font-size:0.85rem;margin-top:2px;}
 
-  /* METHODOLOGY */
-  section.method{padding:48px 0;}
-  section.method .grid{
-    display:grid;
-    grid-template-columns:1fr 1.4fr;
-    gap:40px;
+  /* HIGHLIGHTS */
+  section.highlights{padding:44px 0 8px;}
+  .hl-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);border:1px solid var(--line);}
+  .hl-card{background:var(--paper-raise);padding:24px 26px;}
+  .hl-card .tag{font-size:0.82rem;color:var(--muted);}
+  .hl-card h3{font-size:1.35rem;margin-top:6px;color:var(--navy-deep);}
+  .hl-card .n{
+    font-family:'Fraunces',serif;font-size:1.6rem;color:var(--gold);
+    font-variant-numeric:tabular-nums;margin-top:4px;
   }
-  section.method h2{font-size:1.5rem;margin-bottom:14px;}
-  section.method p{color:#3c3830;max-width:46ch;}
-  section.method ul{padding-left:18px;margin:0;color:#3c3830;}
-  section.method li{margin-bottom:10px;}
-  .divider{height:1px;background:var(--line);margin:0;}
+  .hl-card.menor .n{color:var(--terracotta);}
+
+  /* METHOD + COVERAGE */
+  section.method{padding:56px 0 8px;}
+  section.method .grid{display:grid;grid-template-columns:0.9fr 1.3fr;gap:44px;}
+  section.method h2{font-size:1.55rem;margin-bottom:12px;}
+  section.method > .wrap > p.section-lede{color:#4a4536;max-width:52ch;margin-bottom:0;}
+  ul.criteria{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:14px;}
+  ul.criteria li{
+    background:var(--paper-raise);
+    border-left:3px solid var(--navy);
+    padding:12px 16px;
+    color:#3c3830;
+    font-size:0.96rem;
+  }
+  .divider{height:1px;background:var(--line);margin:44px 0;}
+
+  .cov-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line);}
+  .cov-card{background:var(--paper-raise);padding:20px;}
+  .cov-card .num{font-family:'Fraunces',serif;font-size:1.9rem;font-weight:600;color:var(--navy-deep);font-variant-numeric:tabular-nums;}
+  .cov-card .label{color:var(--muted);font-size:0.85rem;margin-top:2px;}
+  .cov-card.warn{border-top:3px solid var(--terracotta);}
+
+  .chip-list{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px;padding:0;list-style:none;}
+  .chip-list li{
+    background:#f2e6de;color:var(--terracotta);
+    padding:5px 12px;border-radius:20px;font-size:0.85rem;
+  }
 
   /* TABLE */
-  section.table-section{padding:48px 0 80px;}
-  .table-head{
-    display:flex;
-    justify-content:space-between;
-    align-items:flex-end;
-    gap:20px;
-    flex-wrap:wrap;
-    margin-bottom:18px;
-  }
-  .table-head h2{font-size:1.5rem;}
-  input#search, select#filterSituacao, select#filterFaixa{
-    font-family:'IBM Plex Sans', sans-serif;
-    font-size:0.95rem;
-    padding:9px 14px;
-    border:1px solid var(--line);
+  section.table-section{padding:56px 0 80px;}
+  .table-head{margin-bottom:20px;}
+  .table-head h2{font-size:1.55rem;margin-bottom:16px;}
+  .toolbar{
+    display:flex;gap:10px;flex-wrap:wrap;
     background:var(--paper-raise);
-    border-radius:2px;
+    border:1px solid var(--line);
+    padding:12px;
+  }
+  .toolbar select, .toolbar input{
+    font-family:'IBM Plex Sans', sans-serif;
+    font-size:0.92rem;
+    padding:9px 12px;
+    border:1px solid var(--line);
+    background:var(--paper);
+    border-radius:3px;
     color:var(--ink);
   }
-  input#search{min-width:220px;}
-  input#search:focus, select#filterSituacao:focus, select#filterFaixa:focus{
-    outline:2px solid var(--navy);outline-offset:1px;
-  }
+  .toolbar input#search{flex:1 1 220px;min-width:180px;}
+  .toolbar select:focus, .toolbar input:focus{outline:2px solid var(--navy);outline-offset:1px;}
+
   .table-scroll{
     overflow-x:auto;
-    border:1px solid var(--line);
+    border:1px solid var(--line);border-top:none;
     background:var(--paper-raise);
+    max-height:640px;
   }
-  table{
-    width:100%;
-    border-collapse:collapse;
-    font-size:0.92rem;
-    min-width:640px;
-  }
+  table{width:100%;border-collapse:collapse;font-size:0.92rem;min-width:680px;}
   thead th{
-    text-align:left;
-    padding:12px 14px;
-    background:var(--navy);
-    color:#f2efe6;
-    font-weight:500;
-    position:sticky;
-    top:0;
-    cursor:pointer;
-    user-select:none;
-    white-space:nowrap;
+    text-align:left;padding:13px 14px;
+    background:var(--navy);color:#f2efe6;font-weight:500;
+    position:sticky;top:0;cursor:pointer;user-select:none;white-space:nowrap;
   }
+  thead th .sort-ind{color:var(--gold);margin-left:5px;font-size:0.75rem;}
   thead th.num, td.num{text-align:right;font-variant-numeric:tabular-nums;}
-  tbody td{
-    padding:10px 14px;
-    border-top:1px solid var(--line);
-  }
-  tbody tr:hover{background:#f0ede3;}
-  .badge{
-    display:inline-block;
-    padding:2px 8px;
-    border-radius:2px;
-    font-size:0.78rem;
-  }
-  .badge.ok{background:#e4ece2;color:#33613b;}
-  .badge.no-data{background:#f3e2de;color:var(--sem-dado);}
-  .badge.sip{background:#efe6d2;color:var(--gold);}
-  #status{color:var(--muted);font-size:0.9rem;margin-top:14px;}
+  tbody td{padding:10px 14px;border-top:1px solid var(--line);}
+  tbody tr:nth-child(even){background:#faf8f2;}
+  tbody tr:hover{background:#f0e9d8;}
+  .badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:0.78rem;}
+  .badge.ok{background:#e2ede8;color:var(--teal);}
+  .badge.no-data{background:#f3e2de;color:var(--terracotta);}
+  .badge.sip{background:#f3ecd9;color:var(--gold);}
+  #status{color:var(--muted);font-size:0.87rem;margin-top:14px;}
 
-  footer{
-    padding:32px 0 60px;
-    color:var(--muted);
-    font-size:0.85rem;
+  .disclaimer-bar{
+    background:#5a2e22;color:#f6e6de;
+    font-size:0.85rem;text-align:center;
+    padding:9px 0;
   }
+  .disclaimer-bar .wrap{padding:0 28px;}
 
-  @media (max-width:720px){
+  footer{padding:36px 0 60px;color:var(--muted);font-size:0.85rem;border-top:1px solid var(--line);}
+  footer strong{color:var(--terracotta);}
+
+  @media (max-width:760px){
     section.method .grid{grid-template-columns:1fr;}
+    .hl-grid, .cov-grid{grid-template-columns:1fr;}
+    nav.topnav .links{gap:14px;}
   }
 </style>
 </head>
 <body>
 
-<header class="hero">
+<nav class="topnav">
   <div class="wrap">
-    <p class="kicker">Igreja Presbiteriana do Brasil — consolidação do rol atual por sínodo</p>
-    <h1><span class="total-num" id="heroTotal">—</span> membros</h1>
-    <p class="lede">Dados carregados diretamente da planilha oficial. Sempre que a planilha é atualizada, este número — e a tabela abaixo — são recalculados automaticamente.</p>
+    <span class="brand">Estatística IPB</span>
+    <div class="links">
+      <a href="#visao-geral">Visão geral</a>
+      <a href="#metodologia">Metodologia</a>
+      <a href="#tabela">Tabela</a>
+    </div>
   </div>
-</header>
+</nav>
 
-<section class="stats">
+<div class="disclaimer-bar">
+  <div class="wrap">⚠️ Pesquisa não oficial — levantamento independente, sem vínculo institucional com a Igreja Presbiteriana do Brasil. Os números não substituem dados oficiais da IPB.</div>
+</div>
+
+<header class="hero" id="visao-geral">
   <div class="wrap">
-    <div class="stat-grid">
-      <div class="stat-card">
+    <p class="kicker">Igreja Presbiteriana do Brasil — consolidação do rol atual por sínodo (levantamento não oficial)</p>
+    <h1 id="heroTotal">—</h1>
+    <p class="lede">Dados carregados diretamente da planilha deste levantamento independente. Sempre que a planilha é atualizada, este número — e a tabela abaixo — são recalculados automaticamente, sem precisar editar o site.</p>
+    <div class="metric-row">
+      <div class="metric-pill">
         <div class="num" id="statComungantes">—</div>
         <div class="label">Comungantes</div>
       </div>
-      <div class="stat-card">
+      <div class="metric-pill">
         <div class="num" id="statNaoComungantes">—</div>
         <div class="label">Não comungantes</div>
       </div>
-      <div class="stat-card">
-        <div class="num" id="statComTotal">—</div>
-        <div class="label">Sínodos com total documental</div>
+      <div class="metric-pill">
+        <div class="num" id="statSinodos">—</div>
+        <div class="label">Sínodos na planilha</div>
       </div>
-      <div class="stat-card">
-        <div class="num" id="statSemTotal">—</div>
-        <div class="label">Sínodos sem total computável</div>
+    </div>
+  </div>
+</header>
+
+<section class="highlights">
+  <div class="wrap">
+    <div class="hl-grid">
+      <div class="hl-card maior">
+        <div class="tag">Maior sínodo em membros</div>
+        <h3 id="maiorNome">—</h3>
+        <div class="n" id="maiorNum">—</div>
+      </div>
+      <div class="hl-card menor">
+        <div class="tag">Menor sínodo em membros</div>
+        <h3 id="menorNome">—</h3>
+        <div class="n" id="menorNum">—</div>
       </div>
     </div>
   </div>
 </section>
 
-<section class="method">
+<section class="method" id="metodologia">
   <div class="wrap">
-    <div class="grid">
-      <div>
-        <h2>Metodologia</h2>
-        <p>Os números refletem o rol atual documental de cada sínodo. Nenhuma lacuna é estimada: um sínodo sem total localizado aparece como "sem dado computável", nunca como zero.</p>
-      </div>
-      <div>
-        <ul>
-          <li><strong>Comungantes / não comungantes</strong> são somados quando a divisão está disponível na planilha; quando só o total geral existe (como no Sínodo do Piauí), ele aparece sem a divisão entre as duas categorias.</li>
-          <li><strong>Ordenação</strong> da tabela é crescente pelo rol atual; sínodos sem dado ficam ao final da lista.</li>
-          <li><strong>Atualização</strong>: este site não guarda cópia dos dados — a cada carregamento da página, os números vêm direto da planilha publicada.</li>
-        </ul>
-      </div>
+    <h2>Metodologia</h2>
+    <p class="section-lede">Os números refletem o rol atual documental de cada sínodo. Nenhuma lacuna é estimada: um sínodo sem total localizado aparece como "sem dado computável", nunca como zero.</p>
+    <div class="grid" style="margin-top:26px;">
+      <div></div>
+      <ul class="criteria">
+        <li><strong>Comungantes / não comungantes</strong> são somados quando a divisão está disponível na planilha; quando só o total geral existe (como no Sínodo do Piauí), ele aparece sem a divisão entre as duas categorias.</li>
+        <li><strong>Ordenação</strong> da tabela é crescente pelo rol atual; sínodos sem dado ficam ao final da lista.</li>
+        <li><strong>Atualização</strong>: este site não guarda cópia dos dados — a cada carregamento da página, os números vêm direto da planilha publicada.</li>
+      </ul>
     </div>
 
-    <div class="divider" style="margin:36px 0;"></div>
+    <div class="divider"></div>
 
     <div class="grid">
       <div>
         <h2>Cobertura do levantamento</h2>
-        <p>Quantos sínodos entraram na planilha e quantos ainda não têm total documental — recalculado a cada atualização.</p>
+        <p class="section-lede">Quantos sínodos entraram na planilha e quantos ainda não têm total documental.</p>
       </div>
       <div>
-        <div class="stat-grid" style="border:1px solid var(--line);">
-          <div class="stat-card">
+        <div class="cov-grid">
+          <div class="cov-card">
             <div class="num" id="covPrevistos">—</div>
             <div class="label">Sínodos na planilha</div>
           </div>
-          <div class="stat-card">
+          <div class="cov-card">
             <div class="num" id="covComTotal">—</div>
             <div class="label">Com total documental</div>
           </div>
-          <div class="stat-card">
+          <div class="cov-card warn">
             <div class="num" id="covSemTotal">—</div>
             <div class="label">Sem total computável</div>
           </div>
         </div>
-        <p style="margin-top:16px;margin-bottom:6px;color:var(--muted);font-size:0.9rem;">Sínodos sem total computável:</p>
-        <ul id="semDadoList" style="margin:0;padding-left:18px;color:#3c3830;"></ul>
+        <ul class="chip-list" id="semDadoList"></ul>
       </div>
     </div>
   </div>
 </section>
 
-<div class="wrap"><div class="divider"></div></div>
-
-<section class="table-section">
+<section class="table-section" id="tabela">
   <div class="wrap">
     <div class="table-head">
       <h2>Membros por sínodo</h2>
-      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+      <div class="toolbar">
+        <input id="search" type="text" placeholder="Buscar sínodo ou sigla…">
         <select id="filterSituacao">
           <option value="todos">Todas as situações</option>
           <option value="ok">Com total</option>
@@ -275,20 +321,19 @@
           <option value="5000-10000">5.001 a 10.000</option>
           <option value="acima10000">Acima de 10.000</option>
         </select>
-        <input id="search" type="text" placeholder="Buscar sínodo ou sigla…">
       </div>
     </div>
     <div class="table-scroll">
       <table>
         <thead>
           <tr>
-            <th data-key="ordem">#</th>
-            <th data-key="sinodo">Sínodo</th>
-            <th data-key="sigla">Sigla</th>
-            <th class="num" data-key="comungantes">Comungantes</th>
-            <th class="num" data-key="naoComungantes">Não com.</th>
-            <th class="num" data-key="rolAtual">Rol atual</th>
-            <th data-key="situacao">Situação</th>
+            <th data-key="ordem"><span class="th-label">#</span></th>
+            <th data-key="sinodo"><span class="th-label">Sínodo</span></th>
+            <th data-key="sigla"><span class="th-label">Sigla</span></th>
+            <th class="num" data-key="comungantes"><span class="th-label">Comungantes</span></th>
+            <th class="num" data-key="naoComungantes"><span class="th-label">Não com.</span></th>
+            <th class="num" data-key="rolAtual"><span class="th-label">Rol atual</span></th>
+            <th data-key="situacao"><span class="th-label">Situação</span></th>
           </tr>
         </thead>
         <tbody id="tableBody">
@@ -302,14 +347,14 @@
 
 <footer>
   <div class="wrap">
-    Fonte: planilha "Rol de Membros IPB por Sínodo", publicada pelo responsável do levantamento. Este site apenas lê e exibe os dados — nenhuma edição é feita aqui.
+    <strong>Pesquisa não oficial.</strong> Fonte: planilha "Rol de Membros IPB por Sínodo", publicada pelo responsável do levantamento independente. Este site apenas lê e exibe os dados — nenhuma edição é feita aqui. Não há vínculo institucional com a Igreja Presbiteriana do Brasil.
   </div>
 </footer>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 <script>
 /* ==========================================================
-   CONFIGURAÇÃO — troque pelo link publicado da sua planilha
+   CONFIGURAÇÃO — link publicado da planilha (CSV)
    Arquivo > Compartilhar > Publicar na Web > formato CSV
    ========================================================== */
 const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRQ0Xb2Rjznzsb9thkCQoTHJYnEZgiL0dAMX8wHgIhe24sc12lzcEpY9HEb9WosO7n3K695zm1t5sub/pub?gid=1628688452&single=true&output=csv";
@@ -324,9 +369,12 @@ const COL = {
 
 function toNumber(v){
   if (v === undefined || v === null) return null;
-  const s = String(v).trim();
+  let s = String(v).trim();
   if (s === "" || s.toUpperCase() === "NAN") return null;
-  const n = parseFloat(s.replace(",", "."));
+  // Formato brasileiro: "." separa milhar, "," separa decimal.
+  // Ex.: "12.345" = 12345 | "12.345,67" = 12345.67 | "12,5" = 12.5
+  s = s.replace(/\./g, "").replace(",", ".");
+  const n = parseFloat(s);
   return isNaN(n) ? null : n;
 }
 
@@ -345,12 +393,26 @@ function situacaoKey(r){
 }
 
 function faixaMatch(r, faixa){
-  if (faixa === "todas" || r.rolAtual === null) return faixa === "todas";
+  if (faixa === "todas") return true;
+  if (r.rolAtual === null) return false;
   if (faixa === "ate1000") return r.rolAtual <= 1000;
   if (faixa === "1000-5000") return r.rolAtual > 1000 && r.rolAtual <= 5000;
   if (faixa === "5000-10000") return r.rolAtual > 5000 && r.rolAtual <= 10000;
   if (faixa === "acima10000") return r.rolAtual > 10000;
   return true;
+}
+
+function updateSortIndicators(){
+  document.querySelectorAll("thead th[data-key]").forEach(th => {
+    const existing = th.querySelector(".sort-ind");
+    if (existing) existing.remove();
+    if (th.dataset.key === sortKey) {
+      const span = document.createElement("span");
+      span.className = "sort-ind";
+      span.textContent = sortDir === 1 ? "▲" : "▼";
+      th.appendChild(span);
+    }
+  });
 }
 
 function render(){
@@ -397,6 +459,8 @@ function render(){
 
   document.getElementById("status").textContent =
     `${list.length} sínodo(s) exibido(s) de ${rows.length} no total.`;
+
+  updateSortIndicators();
 }
 
 document.querySelectorAll("thead th[data-key]").forEach(th => {
@@ -440,11 +504,10 @@ function loadData(){
       const totalComungantes = comTotal.reduce((s, r) => s + (r.comungantes || 0), 0);
       const totalNaoComungantes = comTotal.reduce((s, r) => s + (r.naoComungantes || 0), 0);
 
-      document.getElementById("heroTotal").textContent = fmt(totalMembros);
+      document.getElementById("heroTotal").textContent = fmt(totalMembros) + " membros";
       document.getElementById("statComungantes").textContent = fmt(totalComungantes);
       document.getElementById("statNaoComungantes").textContent = fmt(totalNaoComungantes);
-      document.getElementById("statComTotal").textContent = comTotal.length;
-      document.getElementById("statSemTotal").textContent = semTotal.length;
+      document.getElementById("statSinodos").textContent = rows.length;
 
       document.getElementById("covPrevistos").textContent = rows.length;
       document.getElementById("covComTotal").textContent = comTotal.length;
@@ -453,13 +516,22 @@ function loadData(){
       const semDadoList = document.getElementById("semDadoList");
       semDadoList.innerHTML = "";
       if (semTotal.length === 0) {
-        semDadoList.innerHTML = "<li>Nenhum — todos os sínodos da planilha têm total documental.</li>";
+        semDadoList.innerHTML = "<li>Nenhum — todos os sínodos têm total documental.</li>";
       } else {
         semTotal.forEach(r => {
           const li = document.createElement("li");
           li.textContent = `${r.sinodo} (${r.sigla})`;
           semDadoList.appendChild(li);
         });
+      }
+
+      if (comTotal.length > 0) {
+        const maior = comTotal.reduce((a,b) => b.rolAtual > a.rolAtual ? b : a);
+        const menor = comTotal.reduce((a,b) => b.rolAtual < a.rolAtual ? b : a);
+        document.getElementById("maiorNome").textContent = maior.sinodo;
+        document.getElementById("maiorNum").textContent = fmt(maior.rolAtual) + " membros";
+        document.getElementById("menorNome").textContent = menor.sinodo;
+        document.getElementById("menorNum").textContent = fmt(menor.rolAtual) + " membros";
       }
 
       render();
