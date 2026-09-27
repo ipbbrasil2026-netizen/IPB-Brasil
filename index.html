@@ -116,6 +116,57 @@
   }
   .hl-card.menor .n{color:var(--terracotta);}
 
+  /* REGIONAL DISTRIBUTION */
+  section.regional{padding:56px 0 8px;}
+  section.regional h2{font-size:1.55rem;margin-bottom:6px;}
+  section.regional .section-lede{color:#4a4536;max-width:52ch;margin-bottom:26px;}
+  .region-bars{
+    background:var(--paper-raise);border:1px solid var(--line);
+    padding:8px 24px;
+  }
+  .region-row{padding:16px 0;border-bottom:1px solid var(--line);}
+  .region-row:last-child{border-bottom:none;}
+  .region-row .rr-top{
+    display:flex;justify-content:space-between;align-items:baseline;
+    margin-bottom:8px;gap:12px;
+  }
+  .region-row .rr-name{
+    font-weight:600;font-size:0.88rem;letter-spacing:0.03em;
+    text-transform:uppercase;color:var(--navy-deep);
+  }
+  .region-row .rr-value{
+    font-family:'Fraunces',serif;font-variant-numeric:tabular-nums;
+    color:var(--navy-deep);font-size:0.98rem;white-space:nowrap;
+  }
+  .region-row .rr-value .pct{color:var(--muted);font-family:'IBM Plex Sans',sans-serif;font-size:0.88rem;}
+  .rr-track{background:#ece6d6;height:8px;border-radius:5px;overflow:hidden;}
+  .rr-fill{height:100%;border-radius:5px;background:var(--teal);}
+  .region-row:first-child .rr-fill{background:var(--gold);}
+
+  /* METHOD CARD (label/description table) */
+  .method-card{
+    background:var(--paper-raise);
+    border:1px solid var(--line);
+    border-radius:6px;
+    padding:28px 30px;
+    margin-top:20px;
+  }
+  .method-card h3{font-size:1.1rem;margin-bottom:16px;}
+  .method-table{margin:0;}
+  .method-row{
+    display:grid;grid-template-columns:170px 1fr;gap:22px;
+    padding:14px 0;border-top:1px solid var(--line);
+  }
+  .method-row:first-child{border-top:none;}
+  .method-row dt{
+    font-weight:700;font-size:0.82rem;letter-spacing:0.03em;
+    text-transform:uppercase;color:var(--teal);
+  }
+  .method-row dd{margin:0;color:#4a4536;font-size:0.94rem;}
+  @media (max-width:600px){
+    .method-row{grid-template-columns:1fr;gap:4px;}
+  }
+
   /* METHOD + COVERAGE */
   section.method{padding:56px 0 8px;}
   section.method .grid{display:grid;grid-template-columns:0.9fr 1.3fr;gap:44px;}
@@ -212,7 +263,8 @@
     <span class="brand">Estatística IPB</span>
     <div class="links">
       <a href="#visao-geral">Visão geral</a>
-      <a href="#metodologia">Metodologia</a>
+      <a href="#regional">Distribuição regional</a>
+      <a href="#metodologia">Metodologia e cobertura</a>
       <a href="#tabela">Tabela</a>
     </div>
   </div>
@@ -261,17 +313,48 @@
   </div>
 </section>
 
+<section class="regional" id="regional">
+  <div class="wrap">
+    <h2>Membros por região</h2>
+    <p class="section-lede">Cada sínodo foi associado a uma região do Brasil a partir do estado indicado em seu próprio nome.</p>
+    <div class="region-bars" id="regionBars">
+      <p style="color:var(--muted);">Calculando distribuição regional…</p>
+    </div>
+  </div>
+</section>
+
 <section class="method" id="metodologia">
   <div class="wrap">
-    <h2>Metodologia</h2>
-    <p class="section-lede">Os números refletem o rol atual documental de cada sínodo. Nenhuma lacuna é estimada: um sínodo sem total localizado aparece como "sem dado computável", nunca como zero.</p>
-    <div class="grid" style="margin-top:26px;">
-      <div></div>
-      <ul class="criteria">
-        <li><strong>Comungantes / não comungantes</strong> são somados quando a divisão está disponível na planilha; quando só o total geral existe (como no Sínodo do Piauí), ele aparece sem a divisão entre as duas categorias.</li>
-        <li><strong>Ordenação</strong> da tabela é crescente pelo rol atual; sínodos sem dado ficam ao final da lista.</li>
-        <li><strong>Atualização</strong>: este site não guarda cópia dos dados — a cada carregamento da página, os números vêm direto da planilha publicada.</li>
-      </ul>
+    <h2>Metodologia e cobertura</h2>
+    <p class="section-lede">Critérios usados para tratar os dados desta planilha.</p>
+    <div class="method-card">
+      <h3>Como os indicadores foram tratados</h3>
+      <dl class="method-table">
+        <div class="method-row">
+          <dt>Membresia</dt>
+          <dd>Rol atual documental de cada sínodo, lido diretamente da planilha publicada. Nenhuma lacuna é estimada.</dd>
+        </div>
+        <div class="method-row">
+          <dt>Com. / não com.</dt>
+          <dd>Comungantes e não comungantes são somados quando a divisão está disponível; quando só o total geral existe (como no Sínodo do Piauí), ele aparece sem divisão entre as duas categorias.</dd>
+        </div>
+        <div class="method-row">
+          <dt>Região</dt>
+          <dd>Cada sínodo foi associado a Norte, Nordeste, Centro-Oeste, Sudeste ou Sul a partir do estado indicado pelo próprio nome do sínodo. É uma classificação por aproximação feita para esta visão, não um dado oficial da IPB.</dd>
+        </div>
+        <div class="method-row">
+          <dt>Cobertura</dt>
+          <dd>Sínodos sem total documental aparecem como "sem dado computável", nunca como zero, e não entram nos totais gerais nem na distribuição regional.</dd>
+        </div>
+        <div class="method-row">
+          <dt>Ordenação</dt>
+          <dd>Da tabela é crescente pelo rol atual; sínodos sem dado ficam ao final da lista.</dd>
+        </div>
+        <div class="method-row">
+          <dt>Atualização</dt>
+          <dd>Este site não guarda cópia dos dados — a cada carregamento da página, os números vêm direto da planilha publicada.</dd>
+        </div>
+      </dl>
     </div>
 
     <div class="divider"></div>
@@ -358,6 +441,46 @@
    Arquivo > Compartilhar > Publicar na Web > formato CSV
    ========================================================== */
 const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRQ0Xb2Rjznzsb9thkCQoTHJYnEZgiL0dAMX8wHgIhe24sc12lzcEpY9HEb9WosO7n3K695zm1t5sub/pub?gid=1628688452&single=true&output=csv";
+
+/* ==========================================================
+   Mapa sínodo -> região, deduzido a partir do estado indicado
+   pelo próprio nome de cada sínodo (não é um dado oficial da IPB).
+   ========================================================== */
+const REGIAO_MAP = {"SÍNODO DO ACRE": "Norte", "SÍNODO NOROESTE DO BRASIL": "Norte", "SÍNODO CENTRO AMÉRICA": "Centro-Oeste", "SÍNODO MATO-GROSSENSE": "Centro-Oeste", "SÍNODO DE MATO GROSSO": "Centro-Oeste", "SÍNODO MATO GROSSO DO SUL": "Centro-Oeste", "SÍNODO DE CAMPINAS": "Sudeste", "SÍNODO MOJIANA": "Sudeste", "SÍNODO UNIDO": "Sudeste", "SÍNODO VALE DO PARAÍBA": "Sudeste", "SÍNODO ALTO PARANAÍBA": "Sudeste", "SÍNODO OESTE DE MINAS": "Sudeste", "SÍNODO SUL DE MINAS": "Sudeste", "SÍNODO DO TRIÂNGULO MINEIRO": "Sudeste", "SÍNODO LESTE DE MINAS": "Sudeste", "SÍNODO RIO DOCE": "Sudeste", "SÍNODO VALE DO AÇO": "Sudeste", "SÍNODO ZONA DA MATA MINEIRA": "Sudeste", "SÍNODO GRANDE ABC": "Sudeste", "SÍNODO LESTE DE SÃO PAULO": "Sudeste", "SÍNODO DO LITORAL PAULISTA": "Sudeste", "SÍNODO OESTE DE SÃO PAULO": "Sudeste", "SÍNODO BAIXADA FLUMINENSE": "Sudeste", "SÍNODO CARIOCA": "Sudeste", "SÍNODO DA GUANABARA": "Sudeste", "SÍNODO NOVA IGUAÇU": "Sudeste", "SÍNODO OESTE FLUMINENSE": "Sudeste", "SÍNODO DO RIO DE JANEIRO": "Sudeste", "SÍNODO NORTE PAULISTANO": "Sudeste", "SÍNODO PAULISTANO": "Sudeste", "SÍNODO DE PIRATININGA": "Sudeste", "SÍNODO DE SÃO PAULO": "Sudeste", "SÍNODO CENTRAL ESPIRITOSSANTENSE": "Sudeste", "SÍNODO ESPÍRITO SANTO/RIO DE JANEIRO": "Sudeste", "SÍNODO MINAS ESPÍRITO SANTO": "Sudeste", "SÍNODO DUQUE DE CAXIAS": "Sudeste", "SÍNODO OESTE DO RIO DE JANEIRO": "Sudeste", "SÍNODO SERRANO FLUMINENSE": "Sudeste", "SÍNODO SUL FLUMINENSE": "Sudeste", "SÍNODO DE BAURU": "Sudeste", "SÍNODO DE LIMEIRA": "Sudeste", "SÍNODO DE SOROCABA": "Sudeste", "SÍNODO SUDOESTE PAULISTA": "Sudeste", "SÍNODO DE ANÁPOLIS": "Centro-Oeste", "SÍNODO ARAGUAIA TOCANTINS": "Centro-Oeste", "SÍNODO BRASIL CENTRAL": "Centro-Oeste", "SÍNODO SUDOESTE DE GOIÁS": "Centro-Oeste", "SÍNODO DO TOCANTINS": "Norte", "SÍNODO DE FLORIANÓPOLIS": "Sul", "SÍNODO DA INTEGRAÇÃO CATARINENSE": "Sul", "SÍNODO MERIDIONAL": "Sul", "SÍNODO SUL DO BRASIL": "Sul", "SÍNODO DA PARAÍBA": "Nordeste", "SÍNODO RIO GRANDE DO NORTE": "Nordeste", "SÍNODO SERGIPE": "Nordeste", "SÍNODO AGRESTE-SUL DE PERNAMBUCO": "Nordeste", "SÍNODO CENTRAL DE PERNAMBUCO": "Nordeste", "SÍNODO DE GARANHUNS": "Nordeste", "SÍNODO DE PERNAMBUCO": "Nordeste", "SÍNODO DO SESQUICENTENÁRIO": "Nordeste", "SÍNODO BANDEIRANTES DE BRASÍLIA": "Centro-Oeste", "SÍNODO DE BRASÍLIA": "Centro-Oeste", "SÍNODO CENTRAL DE BRASÍLIA": "Centro-Oeste", "SÍNODO DO PLANALTO": "Centro-Oeste", "SÍNODO DE TAGUATINGA": "Centro-Oeste", "SÍNODO DE CURITIBA": "Sul", "SÍNODO METROPOLITANO DE LONDRINA": "Sul", "SÍNODO NORTE DO PARANÁ": "Sul", "SÍNODO VALE DO TIBAGI": "Sul", "SÍNODO DA BAHIA": "Nordeste", "SÍNODO CENTRAL DA BAHIA": "Nordeste", "SÍNODO CHAPADA DIAMANTINA": "Nordeste", "SÍNODO EXTREMO SUL DA BAHIA": "Nordeste", "SÍNODO SUL DA BAHIA": "Nordeste", "SÍNODO OESTE DA BAHIA": "Nordeste", "SÍNODO OESTE DE BELO HORIZONTE": "Sudeste", "SÍNODO NOROESTE DA BAHIA": "Nordeste", "SÍNODO NORTE DE MINAS": "Sudeste", "SÍNODO BELO HORIZONTE": "Sudeste", "SÍNODO METROPOLITANO DE BELO HORIZONTE": "Sudeste", "SÍNODO PAMPULHA": "Sudeste", "SÍNODO COSTA DO SOL": "Sudeste", "SÍNODO LESTE FLUMINENSE": "Sudeste", "SÍNODO NORTE FLUMINENSE": "Sudeste", "SÍNODO CENTRO SUL DO MARANHÃO": "Nordeste", "SÍNODO DO MARANHÃO": "Nordeste", "SÍNODO DO PIAUÍ": "Nordeste", "SÍNODO DO CEARÁ": "Nordeste", "SÍNODO CEARENSE INTERIORANO": "Nordeste", "SÍNODO NORTE DO CEARÁ": "Nordeste", "SÍNODO CARAJÁS": "Norte", "SÍNODO MARCO ZERO": "Norte", "SÍNODO SETENTRIONAL": "Norte", "SÍNODO TROPICAL": "Norte", "SINODO LITORAL NORTE PERNANBUCANO": "Nordeste", "SINODO INCONFIDENTES": "Sudeste", "SÍNODO METROPOLITANO DE CAMPINAS": "Sudeste", "SÍNODO ALPHAVILLE SÃO PAULO": "Sudeste"};
+
+const REGIAO_ORDEM = ["Norte","Nordeste","Centro-Oeste","Sudeste","Sul"];
+
+function regiaoDe(nomeSinodo){
+  const key = nomeSinodo.trim().toUpperCase();
+  return REGIAO_MAP[key] || null;
+}
+
+function renderRegional(comTotal){
+  const totals = {};
+  comTotal.forEach(r => {
+    const reg = regiaoDe(r.sinodo);
+    if (!reg) return; // sínodo não mapeado: fica fora da distribuição regional
+    totals[reg] = (totals[reg] || 0) + r.rolAtual;
+  });
+  const grand = Object.values(totals).reduce((a,b) => a+b, 0);
+  const ordered = Object.entries(totals).sort((a,b) => b[1]-a[1]);
+
+  const box = document.getElementById("regionBars");
+  box.innerHTML = "";
+  ordered.forEach(([nome, valor]) => {
+    const pct = grand > 0 ? (100*valor/grand) : 0;
+    const row = document.createElement("div");
+    row.className = "region-row";
+    row.innerHTML = `
+      <div class="rr-top">
+        <span class="rr-name">${nome}</span>
+        <span class="rr-value">${fmt(valor)} <span class="pct">· ${pct.toFixed(1)}%</span></span>
+      </div>
+      <div class="rr-track"><div class="rr-fill" style="width:${pct.toFixed(2)}%"></div></div>
+    `;
+    box.appendChild(row);
+  });
+}
 
 const COL = {
   sinodo: "Sínodo",
@@ -499,6 +622,8 @@ function loadData(){
 
       const comTotal = rows.filter(r => r.rolAtual !== null);
       const semTotal = rows.filter(r => r.rolAtual === null);
+
+      renderRegional(comTotal);
 
       const totalMembros = comTotal.reduce((s, r) => s + r.rolAtual, 0);
       const totalComungantes = comTotal.reduce((s, r) => s + (r.comungantes || 0), 0);
