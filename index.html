@@ -329,6 +329,11 @@
     padding:20px;
   }
   .modal-overlay[hidden]{display:none;}
+  .modal-stats{display:flex;gap:1px;background:var(--line);border:1px solid var(--line);margin:0 0 14px;}
+  .modal-stats .ms{flex:1;background:var(--paper-raise);padding:10px 14px;}
+  .modal-stats .ms span{display:block;font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.04em;}
+  .modal-stats .ms strong{font-family:'Fraunces',serif;font-size:1.25rem;color:var(--navy-deep);font-variant-numeric:tabular-nums;}
+  .modal-stats .ms.total{border-top:3px solid var(--gold);}
   .modal-box{
     background:var(--paper-raise);
     width:100%;max-width:720px;max-height:85vh;
@@ -586,11 +591,16 @@
       </div>
       <button class="modal-close" id="modalClose" type="button" aria-label="Fechar">✕</button>
     </div>
+    <div class="modal-stats" id="modalStats">
+      <div class="ms"><span>Comungantes</span><strong id="msCom">-</strong></div>
+      <div class="ms"><span>Não comungantes</span><strong id="msNaoCom">-</strong></div>
+      <div class="ms total"><span>Total (rol atual)</span><strong id="msTotal">-</strong></div>
+    </div>
     <div class="modal-toolbar">
       <input id="modalSearch" type="text" placeholder="Buscar presbitério ou igreja/congregação…">
     </div>
     <div class="modal-body" id="modalBody"></div>
-    <p class="modal-note">Leitura parcial do PDF do relatório da Tesouraria, sujeita a conferência. Nomes de igrejas podem conter erros de leitura (OCR). Rol separado integra os comungantes; não é somado novamente ao rol atual.</p>
+    <p class="modal-note">Leitura parcial do PDF do relatório da Tesouraria, sujeita a conferência. Nomes de igrejas podem conter erros de leitura (OCR). Os números acima são do sínodo (a planilha não traz esses dados por presbitério). Rol separado integra os comungantes; não é somado novamente ao rol atual.</p>
   </div>
 </div>
 
@@ -962,6 +972,10 @@ function openPresbModal(sigla, nome, isRefresh){
   const overlay = document.getElementById("presbModalOverlay");
   modalSigla = sigla; modalNome = nome;
   document.getElementById("modalSinodoNome").textContent = nome;
+  const rowSin = rows.find(x => x.sigla === sigla && x.sinodo === nome) || rows.find(x => x.sinodo === nome);
+  document.getElementById("msCom").textContent = rowSin ? fmt(rowSin.comungantes) : "-";
+  document.getElementById("msNaoCom").textContent = rowSin ? fmt(rowSin.naoComungantes) : "-";
+  document.getElementById("msTotal").textContent = rowSin ? fmt(rowSin.rolAtual) : "-";
   if (!isRefresh) document.getElementById("modalSearch").value = "";
   const body = document.getElementById("modalBody");
 
