@@ -520,7 +520,7 @@
 <section class="compare" id="comparativo">
   <div class="wrap">
     <h2>Comparativo: ano atual × ano anterior</h2>
-    <p class="section-lede">Comungantes, não comungantes e total de membros nos dois anos. Total = comungantes + não comungantes, nos dois anos. Todos os sínodos aparecem; os que não têm dado catalogado são indicados como “Dados não catalogados”.</p>
+    <p class="section-lede">Comungantes, não comungantes e total de membros nos dois anos. Total do ano atual = Rol Atual T; total do ano anterior = comungantes + não comungantes. Todos os sínodos aparecem; os que não têm dado catalogado são indicados como “Dados não catalogados”.</p>
     <div id="cmpContent"><p class="cmp-note">Carregando comparativo…</p></div>
   </div>
 </section>
@@ -899,7 +899,8 @@ function findHeaderRow(data){
         presb: iPres,
         siglaPresb: find(c => c.startsWith("sigla") && c.includes("presbiterio"), iPres + 1),
         igreja: find(c => c.startsWith("igreja"), iPres + 2),
-        tipo: find(c => c.startsWith("tipo"), iPres + 3)
+        tipo: find(c => c.startsWith("tipo"), iPres + 3),
+        rolAtual: row.findIndex(c => c.startsWith("rol atual"))
       };
     }
   }
@@ -952,6 +953,10 @@ function loadPresbData(){
         if (!entry){
           entry = { sinodoNome, siglaSinodo, presbiterios: {} };
         }
+        if (h.rolAtual !== -1 && entry.rolAtual === undefined){
+          const rv = toNumber(row[h.rolAtual]);
+          if (rv !== null) entry.rolAtual = rv;
+        }
         if (siglaSinodo) presbBySigla[siglaSinodo] = entry;
         if (canon) presbByName[canon] = entry;
 
@@ -973,6 +978,7 @@ function loadPresbData(){
       }
       presbDataLoaded = true;
       presbLoadState = "ok";
+      refreshComparativoData();
       presbLoadMsg = "";
       refreshOpenModal();
     },
@@ -1119,16 +1125,29 @@ let cmpCharts = [];
 let cmpAll = [];          // todos os sínodos (com status)
 let cmpSel = new Set();   // vazio = todos
 const NC = "Dados não catalogados";
+let cmpSource = null;
+function refreshComparativoData(){
+  if (!cmpSource || !document.getElementById("cmpResult")) return;
+  cmpAll = buildCmpData(cmpSource);
+  updateComparativo();
+}
 
 function buildCmpData(allRows){
   return allRows.map(r => {
     const completo = r.comungantes !== null && r.comAnt !== null &&
                      r.naoComungantes !== null && r.naoComAnt !== null &&
                      (r.comAnt + r.naoComAnt) > 0;
+    // Total do ano atual = "Rol Atual T" da planilha (mesmo total do topo da página);
+    // se vier vazio, usa comungantes + não comungantes.
+    const pe = presbDataLoaded ? findPresbEntry(r.sigla, r.sinodo) : null;
+    const presbRol = pe && pe.rolAtual !== undefined ? pe.rolAtual : null;
+    const curTot = r.rolAtual !== null ? r.rolAtual
+      : (r.comungantes !== null || r.naoComungantes !== null ? (r.comungantes || 0) + (r.naoComungantes || 0) : presbRol);
     return Object.assign({}, r, {
       ok: completo,
+      curTot: curTot,
       totAnt: completo ? r.comAnt + r.naoComAnt : null,
-      totAtual: completo ? r.comungantes + r.naoComungantes : null
+      totAtual: completo ? curTot : null
     });
   }).sort((a, b) => a.sinodo.localeCompare(b.sinodo, "pt-BR"));
 }
@@ -1143,6 +1162,7 @@ function renderComparativo(allRows, prevCols){
     return;
   }
 
+  cmpSource = allRows;
   cmpAll = buildCmpData(allRows);
   cmpSel = new Set();
 
@@ -1227,7 +1247,7 @@ function updateComparativo(){
     com: [sum("comAnt"), sum("comungantes")],
     nao: [sum("naoComAnt"), sum("naoComungantes")]
   };
-  T.rol = [T.com[0] + T.nao[0], T.com[1] + T.nao[1]];
+  T.rol = [T.com[0] + T.nao[0], sum("curTot")];
 
   const card = (titulo, [ant, atu]) => `
     <div class="cmp-card"><h3>${titulo}</h3>
@@ -1239,7 +1259,7 @@ function updateComparativo(){
   const cell = (v) => v === null ? `<td class="num nc">${NC}</td>` : `<td class="num">${fmt(v)}</td>`;
   const trs = sel.map(r => {
     if (!r.ok){
-      const parc = (r.comungantes !== null || r.naoComungantes !== null) ? fmt((r.comungantes || 0) + (r.naoComungantes || 0)) : null;
+      const parc = r.curTot !== null ? fmt(r.curTot) : null;
       return `<tr><td>${escapeHtml(r.sinodo)}</td><td>${escapeHtml(r.sigla || "")}</td>
         <td class="num nc">${NC}</td>${parc === null ? `<td class="num nc">${NC}</td>` : `<td class="num">${parc}</td>`}
         <td class="num nc">${NC}</td><td class="num nc">${NC}</td></tr>`;
@@ -1268,7 +1288,7 @@ function updateComparativo(){
     <div class="cmp-table-wrap"><table class="cmp-table">
       <thead><tr><th>Sínodo</th><th>Sigla</th><th class="num">Total ano anterior</th><th class="num">Total ano atual</th><th class="num">Variação</th><th class="num">%</th></tr></thead>
       <tbody>${trs}</tbody></table></div>
-    <p class="cmp-note">Cards e gráficos de totais somam todos os sínodos da seleção, cada ano com os dados disponíveis (campo vazio conta como zero). O gráfico de variação por sínodo mostra apenas os que têm dado nos dois anos${semDado ? "; " + semDado + " aparece(m) como “" + NC + "” na tabela" : ""}.</p>`;
+    <p class="cmp-note">Cards e gráficos de totais somam todos os sínodos da seleção, cada ano com os dados disponíveis (campo vazio conta como zero). O total do ano atual é o “Rol Atual T” da planilha (quando o sínodo não tem esse dado na aba principal, usa o “Rol atual do sínodo” da aba de presbitérios); o do ano anterior é comungantes + não comungantes. O gráfico de variação por sínodo mostra apenas os que têm dado nos dois anos${semDado ? "; " + semDado + " aparece(m) como “" + NC + "” na tabela" : ""}.</p>`;
 
   if (!hasAny) return;
 
@@ -1297,7 +1317,7 @@ function updateComparativo(){
     const g = regiaoDe(r.sinodo); if (!g) return;
     reg[g] = reg[g] || [0,0];
     reg[g][0] += n(r.comAnt) + n(r.naoComAnt);
-    reg[g][1] += n(r.comungantes) + n(r.naoComungantes);
+    reg[g][1] += n(r.curTot);
   });
   const regNomes = REGIAO_ORDEM.filter(g => reg[g]);
   cmpCharts.push(new Chart(document.getElementById("cmpRegiao"), {
