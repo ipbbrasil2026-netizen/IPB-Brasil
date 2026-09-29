@@ -706,6 +706,12 @@ function renderRegional(comTotal){
 
 const CHART_COLORS = ["#c89b3c","#3c7268","#1f3a52","#b15a43","#8a7ab5","#6d6656"];
 
+// Sem linhas de grade de fundo em nenhum gráfico
+if (typeof Chart !== "undefined"){
+  Chart.defaults.scale.grid.display = false;
+  Chart.defaults.scale.grid.drawTicks = false;
+}
+
 let DATALABELS_OK = false;
 try {
   Chart.register(ChartDataLabels);
