@@ -495,7 +495,7 @@
 <section class="compare" id="comparativo">
   <div class="wrap">
     <h2>Comparativo: ano atual × ano anterior</h2>
-    <p class="section-lede">Comungantes, não comungantes e total de membros nos dois anos. Considera apenas os sínodos que têm dado nos dois anos, para a comparação ser justa.</p>
+    <p class="section-lede">Comungantes, não comungantes e total de membros nos dois anos. Total = comungantes + não comungantes, nos dois anos. Considera apenas os sínodos que têm dado nos dois anos, para a comparação ser justa.</p>
     <div id="cmpContent"><p class="cmp-note">Carregando comparativo…</p></div>
   </div>
 </section>
@@ -1089,16 +1089,21 @@ function renderComparativo(allRows, prevCols){
   const box = document.getElementById("cmpContent");
   cmpCharts.forEach(c => c.destroy()); cmpCharts = [];
 
-  if (!prevCols.com || !prevCols.naoCom || !prevCols.rol){
-    box.innerHTML = '<div class="cmp-warn">Não encontrei na planilha as colunas do <strong>ano anterior</strong> (esperado: cabeçalhos contendo "Ano Anterior" para comungantes, não comungantes e rol). ' +
+  if (!prevCols.com || !prevCols.naoCom){
+    box.innerHTML = '<div class="cmp-warn">Não encontrei na planilha as colunas do <strong>ano anterior</strong> (esperado: "Comungantes Ano Anterior T" e "Não Comungantes Ano Anterior T"). ' +
       'Colunas encontradas: ' + escapeHtml((window.__csvFields || []).join(" | ")) + '</div>';
     return;
   }
 
-  const pairs = allRows.filter(r =>
-    r.rolAtual !== null && r.rolAnt !== null &&
-    r.comungantes !== null && r.comAnt !== null &&
-    r.naoComungantes !== null && r.naoComAnt !== null);
+  const pairs = allRows
+    .filter(r =>
+      r.comungantes !== null && r.comAnt !== null &&
+      r.naoComungantes !== null && r.naoComAnt !== null)
+    .map(r => Object.assign({}, r, {
+      totAnt: r.comAnt + r.naoComAnt,
+      totAtual: r.comungantes + r.naoComungantes
+    }))
+    .filter(r => r.totAnt > 0);
 
   if (!pairs.length){
     box.innerHTML = '<div class="cmp-warn">Nenhum sínodo tem dados completos nos dois anos.</div>';
@@ -1109,7 +1114,7 @@ function renderComparativo(allRows, prevCols){
   const T = {
     com: [sum("comAnt"), sum("comungantes")],
     nao: [sum("naoComAnt"), sum("naoComungantes")],
-    rol: [sum("rolAnt"), sum("rolAtual")]
+    rol: [sum("totAnt"), sum("totAtual")]
   };
 
   const card = (titulo, [ant, atu]) => `
@@ -1130,7 +1135,7 @@ function renderComparativo(allRows, prevCols){
       <div class="chart-card"><h3>Total por região</h3><div class="chart-wrap"><canvas id="cmpRegiao"></canvas></div></div>
       <div class="chart-card wide"><h3>Variação de membros por sínodo (maiores altas e quedas)</h3><div class="chart-wrap"><canvas id="cmpVar"></canvas></div></div>
     </div>
-    <p class="cmp-note">Base da comparação: ${pairs.length} sínodo(s) com dados completos nos dois anos (de ${allRows.length} no levantamento).</p>`;
+    <p class="cmp-note">Base da comparação: ${pairs.length} sínodo(s) com dados completos nos dois anos (de ${allRows.length} no levantamento). Sínodos sem dado no ano anterior (zerado ou em branco) ficam de fora.</p>`;
 
   const dl = (extra) => DATALABELS_OK ? Object.assign({
     color:"#122029", font:{weight:"600", size:10},
@@ -1156,7 +1161,7 @@ function renderComparativo(allRows, prevCols){
   pairs.forEach(r => {
     const g = regiaoDe(r.sinodo); if (!g) return;
     reg[g] = reg[g] || [0,0];
-    reg[g][0] += r.rolAnt; reg[g][1] += r.rolAtual;
+    reg[g][0] += r.totAnt; reg[g][1] += r.totAtual;
   });
   const regNomes = REGIAO_ORDEM.filter(g => reg[g]);
   cmpCharts.push(new Chart(document.getElementById("cmpRegiao"), {
@@ -1173,7 +1178,7 @@ function renderComparativo(allRows, prevCols){
       scales:{ y:{ ticks } } }
   }));
 
-  const vars = pairs.map(r => ({ nome: r.sigla || r.sinodo, d: r.rolAtual - r.rolAnt }))
+  const vars = pairs.map(r => ({ nome: r.sigla || r.sinodo, d: r.totAtual - r.totAnt }))
                     .filter(v => v.d !== 0).sort((a,b) => b.d - a.d);
   const sel = vars.length > 16 ? vars.slice(0, 8).concat(vars.slice(-8)) : vars;
   cmpCharts.push(new Chart(document.getElementById("cmpVar"), {
@@ -1427,6 +1432,11 @@ function loadData(){
           naoComungantes: toNumber(r[COL.naoComungantes]),
           rolAtual: toNumber(r[COL.rolAtual])
         }))
+        .map(o => {
+          // Sem coluna de rol do ano anterior na planilha: total anterior = comungantes + não comungantes
+          if (o.rolAnt === null && o.comAnt !== null) o.rolAnt = o.comAnt + (o.naoComAnt || 0);
+          return o;
+        })
         .filter(r => r.sinodo !== "" && r.sinodo.trim().toUpperCase() !== "TOTAL");
 
       const comTotal = rows.filter(r => r.rolAtual !== null);
