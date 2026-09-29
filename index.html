@@ -613,12 +613,14 @@
    CONFIGURAÇÃO — link publicado da fonte de dados (CSV)
    Arquivo > Compartilhar > Publicar na Web > formato CSV
    ========================================================== */
-const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRQ0Xb2Rjznzsb9thkCQoTHJYnEZgiL0dAMX8wHgIhe24sc12lzcEpY9HEb9WosO7n3K695zm1t5sub/pub?gid=1628688452&single=true&output=csv";
+const SHEET_PUB_BASE = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRQ0Xb2Rjznzsb9thkCQoTHJYnEZgiL0dAMX8wHgIhe24sc12lzcEpY9HEb9WosO7n3K695zm1t5sub/pub";
+// Planilha publicada inteira: cada aba é escolhida pelo gid (sem gid, o Google devolve só a 1ª aba).
+const SHEET_CSV_URL = SHEET_PUB_BASE + "?gid=1628688452&single=true&output=csv";
 
 /* ==========================================================
    Aba adicional — presbitérios e igrejas/congregações por sínodo
    ========================================================== */
-const SHEET_CSV_URL_PRESB = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRQ0Xb2Rjznzsb9thkCQoTHJYnEZgiL0dAMX8wHgIhe24sc12lzcEpY9HEb9WosO7n3K695zm1t5sub/pub?gid=574150325&single=true&output=csv";
+const SHEET_CSV_URL_PRESB = SHEET_PUB_BASE + "?gid=574150325&single=true&output=csv";
 
 /* ==========================================================
    Mapa sínodo -> região, deduzido a partir do estado indicado
@@ -806,45 +808,84 @@ function canonicalSinodoKey(nome){
   return s;
 }
 
+let presbLoadState = "loading";   // "loading" | "ok" | "error"
+let presbLoadMsg = "";
+let modalSigla = "", modalNome = "";
+
+function normHeader(s){
+  return stripAccents(String(s || "")).replace(/^\uFEFF/, "").trim().toLowerCase();
+}
+
+function findHeaderRow(data){
+  const limit = Math.min(40, data.length);
+  for (let i = 0; i < limit; i++){
+    const row = (data[i] || []).map(normHeader);
+    const iSin = row.indexOf("sinodo");
+    const iPres = row.indexOf("presbiterio");
+    if (iSin !== -1 && iPres !== -1){
+      const find = (fn, fallback) => { const k = row.findIndex(fn); return k === -1 ? fallback : k; };
+      return {
+        idx: i,
+        sinodo: iSin,
+        siglaSinodo: find(c => c.startsWith("sigla") && c.includes("sinodo"), iSin + 1),
+        presb: iPres,
+        siglaPresb: find(c => c.startsWith("sigla") && c.includes("presbiterio"), iPres + 1),
+        igreja: find(c => c.startsWith("igreja"), iPres + 2),
+        tipo: find(c => c.startsWith("tipo"), iPres + 3)
+      };
+    }
+  }
+  return null;
+}
+
+function setPresbError(msg){
+  presbDataLoaded = false;
+  presbLoadState = "error";
+  presbLoadMsg = msg;
+  console.error("[presbitérios]", msg);
+  refreshOpenModal();
+}
+
+function refreshOpenModal(){
+  const overlay = document.getElementById("presbModalOverlay");
+  if (overlay && !overlay.hidden) openPresbModal(modalSigla, modalNome, true);
+}
+
 function loadPresbData(){
+  presbLoadState = "loading";
+  presbBySigla = {}; presbByName = {};
   Papa.parse(SHEET_CSV_URL_PRESB, {
     download: true,
     header: false,
     skipEmptyLines: false,
     complete: function(results){
-      const data = results.data;
-      let headerIdx = -1;
-      for (let i = 0; i < Math.min(15, data.length); i++){
-        const row = data[i];
-        if (row && String(row[1] || "").trim() === "Sínodo" && String(row[3] || "").trim() === "Presbitério"){
-          headerIdx = i;
-          break;
-        }
-      }
-      if (headerIdx === -1){
-        console.warn("Não foi possível localizar o cabeçalho da aba de presbitérios/igrejas.");
-        presbDataLoaded = false;
+      const data = results.data || [];
+      const h = findHeaderRow(data);
+      if (!h){
+        const first = (data[0] || []).join(" ").slice(0, 80);
+        setPresbError("A aba de presbitérios não foi reconhecida (cabeçalho 'Sínodo'/'Presbitério' não encontrado). " +
+          "Provavelmente o link publicado dessa aba não está liberado. Primeira linha recebida: \"" + first + "\"");
         return;
       }
 
-      for (let i = headerIdx + 1; i < data.length; i++){
+      for (let i = h.idx + 1; i < data.length; i++){
         const row = data[i];
-        if (!row || row.length < 6) continue;
-        const sinodoNome = String(row[1] || "").trim();
+        if (!row) continue;
+        const sinodoNome = String(row[h.sinodo] || "").trim();
         if (!sinodoNome) continue;
-        const siglaSinodo = String(row[2] || "").trim().toUpperCase();
-        const presbNome = String(row[3] || "").trim();
-        const siglaPresb = String(row[4] || "").trim().toUpperCase();
-        const igrejaNome = String(row[5] || "").trim();
-        const tipo = String(row[6] || "").trim();
+        const siglaSinodo = String(row[h.siglaSinodo] || "").trim().toUpperCase();
+        const presbNome = String(row[h.presb] || "").trim();
+        const siglaPresb = String(row[h.siglaPresb] || "").trim().toUpperCase();
+        const igrejaNome = String(row[h.igreja] || "").trim();
+        const tipo = String(row[h.tipo] || "").trim();
 
         const canon = canonicalSinodoKey(sinodoNome);
         let entry = (siglaSinodo && presbBySigla[siglaSinodo]) || (canon && presbByName[canon]);
         if (!entry){
           entry = { sinodoNome, siglaSinodo, presbiterios: {} };
-          if (siglaSinodo) presbBySigla[siglaSinodo] = entry;
-          if (canon) presbByName[canon] = entry;
         }
+        if (siglaSinodo) presbBySigla[siglaSinodo] = entry;
+        if (canon) presbByName[canon] = entry;
 
         if (!presbNome) continue;
 
@@ -857,11 +898,19 @@ function loadPresbData(){
           pres.igrejas.push({ nome: igrejaNome, tipo: tipo });
         }
       }
+
+      if (Object.keys(presbByName).length === 0 && Object.keys(presbBySigla).length === 0){
+        setPresbError("A aba foi lida, mas não trouxe nenhuma linha de dados abaixo do cabeçalho.");
+        return;
+      }
       presbDataLoaded = true;
+      presbLoadState = "ok";
+      presbLoadMsg = "";
+      refreshOpenModal();
     },
     error: function(err){
-      console.error("Falha ao carregar dados de presbitérios/igrejas:", err);
-      presbDataLoaded = false;
+      setPresbError("Falha ao baixar a aba de presbitérios (" + (err && err.message ? err.message : "erro de rede/permissão") +
+        "). Confira em Arquivo > Compartilhar > Publicar na Web se a aba está publicada em CSV.");
     }
   });
 }
@@ -909,15 +958,27 @@ function renderModalBody(entry, query){
   body.innerHTML = html || '<p class="no-presb">Nenhum presbitério identificado para este sínodo na leitura parcial.</p>';
 }
 
-function openPresbModal(sigla, nome){
+function openPresbModal(sigla, nome, isRefresh){
   const overlay = document.getElementById("presbModalOverlay");
+  modalSigla = sigla; modalNome = nome;
   document.getElementById("modalSinodoNome").textContent = nome;
-  document.getElementById("modalSearch").value = "";
+  if (!isRefresh) document.getElementById("modalSearch").value = "";
   const body = document.getElementById("modalBody");
 
-  if (!presbDataLoaded){
+  if (presbLoadState === "loading"){
     document.getElementById("modalSinodoMeta").textContent = "Carregando dados de presbitérios…";
     body.innerHTML = '<p class="no-presb">Carregando…</p>';
+    currentModalEntry = null;
+    overlay.hidden = false;
+    return;
+  }
+
+  if (presbLoadState === "error"){
+    document.getElementById("modalSinodoMeta").textContent = "Não foi possível carregar os presbitérios.";
+    body.innerHTML = '<p class="no-presb">' + escapeHtml(presbLoadMsg) +
+      '</p><p class="no-presb"><button type="button" class="btnDetalhe" id="btnRetryPresb">Tentar novamente</button></p>';
+    const rb = document.getElementById("btnRetryPresb");
+    if (rb) rb.addEventListener("click", () => { loadPresbData(); openPresbModal(modalSigla, modalNome, true); });
     currentModalEntry = null;
     overlay.hidden = false;
     return;
