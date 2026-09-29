@@ -383,6 +383,24 @@
     .hl-grid, .cov-grid{grid-template-columns:1fr;}
     nav.topnav .links{gap:14px;}
   }
+
+  /* COMPARATIVO ANO ATUAL x ANTERIOR */
+  section.compare{padding:56px 0 8px;}
+  section.compare h2{font-size:1.55rem;margin-bottom:6px;}
+  section.compare .section-lede{color:#4a4536;max-width:62ch;margin-bottom:26px;}
+  .cmp-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:18px;}
+  .cmp-card{background:var(--paper-raise);padding:20px 22px;border-top:3px solid var(--gold);}
+  .cmp-card:nth-child(2){border-top-color:var(--teal);}
+  .cmp-card:nth-child(3){border-top-color:var(--navy);}
+  .cmp-card h3{font-size:0.85rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted);margin-bottom:10px;font-family:'IBM Plex Sans',sans-serif;font-weight:600;}
+  .cmp-card .row{display:flex;justify-content:space-between;font-size:0.9rem;color:var(--muted);}
+  .cmp-card .row strong{color:var(--ink);font-variant-numeric:tabular-nums;}
+  .cmp-card .delta{margin-top:10px;font-family:'Fraunces',serif;font-size:1.35rem;font-variant-numeric:tabular-nums;}
+  .cmp-card .delta small{font-family:'IBM Plex Sans',sans-serif;font-size:0.8rem;color:var(--muted);margin-left:6px;}
+  .delta.up{color:var(--teal);} .delta.down{color:var(--terracotta);} .delta.flat{color:var(--muted);}
+  .cmp-note{color:var(--muted);font-size:0.85rem;margin:14px 0 0;}
+  .cmp-warn{background:#fff7e0;border:1px solid var(--gold);padding:14px 18px;font-size:0.9rem;}
+  @media (max-width:760px){.cmp-cards{grid-template-columns:1fr;}}
 </style>
 </head>
 <body>
@@ -394,6 +412,7 @@
       <a href="#visao-geral">Visão geral</a>
       <a href="#regional">Distribuição regional</a>
       <a href="#graficos">Gráficos</a>
+      <a href="#comparativo">Comparativo</a>
       <a href="#metodologia">Metodologia e cobertura</a>
       <a href="#tabela">Tabela</a>
     </div>
@@ -470,6 +489,14 @@
         <div class="chart-wrap"><canvas id="chartTop10"></canvas></div>
       </div>
     </div>
+  </div>
+</section>
+
+<section class="compare" id="comparativo">
+  <div class="wrap">
+    <h2>Comparativo: ano atual × ano anterior</h2>
+    <p class="section-lede">Comungantes, não comungantes e total de membros nos dois anos. Considera apenas os sínodos que têm dado nos dois anos, para a comparação ser justa.</p>
+    <div id="cmpContent"><p class="cmp-note">Carregando comparativo…</p></div>
   </div>
 </section>
 
@@ -1032,6 +1059,136 @@ document.addEventListener("keydown", (e) => {
   if (e.key === "Escape") closePresbModal();
 });
 
+/* ==========================================================
+   Comparativo ano atual x ano anterior
+   As colunas do ano anterior são localizadas pelo nome do cabeçalho
+   (contém "anterior" + comungantes / não comungantes / rol).
+   ========================================================== */
+function detectPrevCols(fields){
+  const res = {};
+  (fields || []).forEach(f => {
+    const n = stripAccents(f).toLowerCase();
+    if (!n.includes("anterior")) return;
+    if (n.includes("nao com")) res.naoCom = f;
+    else if (n.includes("comungantes")) res.com = f;
+    else if (n.includes("rol") || n.includes("total")) res.rol = f;
+  });
+  return res;
+}
+
+function deltaHtml(atual, ant){
+  const d = atual - ant;
+  const pct = ant ? (d / ant * 100) : null;
+  const cls = d > 0 ? "up" : d < 0 ? "down" : "flat";
+  const sign = d > 0 ? "+" : d < 0 ? "−" : "";
+  return `<div class="delta ${cls}">${sign}${fmt(Math.abs(d))}<small>${pct === null ? "" : sign + Math.abs(pct).toFixed(1).replace(".", ",") + "%"}</small></div>`;
+}
+
+let cmpCharts = [];
+function renderComparativo(allRows, prevCols){
+  const box = document.getElementById("cmpContent");
+  cmpCharts.forEach(c => c.destroy()); cmpCharts = [];
+
+  if (!prevCols.com || !prevCols.naoCom || !prevCols.rol){
+    box.innerHTML = '<div class="cmp-warn">Não encontrei na planilha as colunas do <strong>ano anterior</strong> (esperado: cabeçalhos contendo "Ano Anterior" para comungantes, não comungantes e rol). ' +
+      'Colunas encontradas: ' + escapeHtml((window.__csvFields || []).join(" | ")) + '</div>';
+    return;
+  }
+
+  const pairs = allRows.filter(r =>
+    r.rolAtual !== null && r.rolAnt !== null &&
+    r.comungantes !== null && r.comAnt !== null &&
+    r.naoComungantes !== null && r.naoComAnt !== null);
+
+  if (!pairs.length){
+    box.innerHTML = '<div class="cmp-warn">Nenhum sínodo tem dados completos nos dois anos.</div>';
+    return;
+  }
+
+  const sum = (k) => pairs.reduce((s, r) => s + r[k], 0);
+  const T = {
+    com: [sum("comAnt"), sum("comungantes")],
+    nao: [sum("naoComAnt"), sum("naoComungantes")],
+    rol: [sum("rolAnt"), sum("rolAtual")]
+  };
+
+  const card = (titulo, [ant, atu]) => `
+    <div class="cmp-card"><h3>${titulo}</h3>
+      <div class="row"><span>Ano anterior</span><strong>${fmt(ant)}</strong></div>
+      <div class="row"><span>Ano atual</span><strong>${fmt(atu)}</strong></div>
+      ${deltaHtml(atu, ant)}
+    </div>`;
+
+  box.innerHTML = `
+    <div class="cmp-cards">
+      ${card("Comungantes", T.com)}
+      ${card("Não comungantes", T.nao)}
+      ${card("Total de membros", T.rol)}
+    </div>
+    <div class="chart-grid">
+      <div class="chart-card"><h3>Visão geral: anterior × atual</h3><div class="chart-wrap"><canvas id="cmpGeral"></canvas></div></div>
+      <div class="chart-card"><h3>Total por região</h3><div class="chart-wrap"><canvas id="cmpRegiao"></canvas></div></div>
+      <div class="chart-card wide"><h3>Variação de membros por sínodo (maiores altas e quedas)</h3><div class="chart-wrap"><canvas id="cmpVar"></canvas></div></div>
+    </div>
+    <p class="cmp-note">Base da comparação: ${pairs.length} sínodo(s) com dados completos nos dois anos (de ${allRows.length} no levantamento).</p>`;
+
+  const dl = (extra) => DATALABELS_OK ? Object.assign({
+    color:"#122029", font:{weight:"600", size:10},
+    formatter: v => v.toLocaleString("pt-BR")
+  }, extra) : false;
+  const ticks = { callback: v => v.toLocaleString("pt-BR") };
+
+  cmpCharts.push(new Chart(document.getElementById("cmpGeral"), {
+    type: "bar",
+    data: {
+      labels: ["Comungantes", "Não comungantes", "Total"],
+      datasets: [
+        { label: "Ano anterior", data: [T.com[0], T.nao[0], T.rol[0]], backgroundColor: "#b9b39f" },
+        { label: "Ano atual",    data: [T.com[1], T.nao[1], T.rol[1]], backgroundColor: "#1f3a52" }
+      ]
+    },
+    options: { responsive:true, maintainAspectRatio:false, layout:{padding:{top:22}},
+      plugins:{ legend:{position:"bottom"}, datalabels: dl({anchor:"end", align:"top"}) },
+      scales:{ y:{ ticks } } }
+  }));
+
+  const reg = {};
+  pairs.forEach(r => {
+    const g = regiaoDe(r.sinodo); if (!g) return;
+    reg[g] = reg[g] || [0,0];
+    reg[g][0] += r.rolAnt; reg[g][1] += r.rolAtual;
+  });
+  const regNomes = REGIAO_ORDEM.filter(g => reg[g]);
+  cmpCharts.push(new Chart(document.getElementById("cmpRegiao"), {
+    type: "bar",
+    data: {
+      labels: regNomes,
+      datasets: [
+        { label: "Ano anterior", data: regNomes.map(g => reg[g][0]), backgroundColor: "#b9b39f" },
+        { label: "Ano atual",    data: regNomes.map(g => reg[g][1]), backgroundColor: "#3c7268" }
+      ]
+    },
+    options: { responsive:true, maintainAspectRatio:false, layout:{padding:{top:22}},
+      plugins:{ legend:{position:"bottom"}, datalabels: dl({anchor:"end", align:"top", font:{weight:"600", size:9}}) },
+      scales:{ y:{ ticks } } }
+  }));
+
+  const vars = pairs.map(r => ({ nome: r.sigla || r.sinodo, d: r.rolAtual - r.rolAnt }))
+                    .filter(v => v.d !== 0).sort((a,b) => b.d - a.d);
+  const sel = vars.length > 16 ? vars.slice(0, 8).concat(vars.slice(-8)) : vars;
+  cmpCharts.push(new Chart(document.getElementById("cmpVar"), {
+    type: "bar",
+    data: {
+      labels: sel.map(v => v.nome),
+      datasets: [{ label: "Variação de membros", data: sel.map(v => v.d),
+        backgroundColor: sel.map(v => v.d >= 0 ? "#3c7268" : "#b15a43") }]
+    },
+    options: { responsive:true, maintainAspectRatio:false, layout:{padding:{top:22, bottom:6}},
+      plugins:{ legend:{display:false}, datalabels: dl({anchor:"end", align:"end", clamp:true}) },
+      scales:{ y:{ ticks } } }
+  }));
+}
+
 let rows = [];
 let sortKey = "rolAtual";
 let sortDir = 1;
@@ -1257,8 +1414,13 @@ function loadData(){
     header: true,
     skipEmptyLines: true,
     complete: function(results){
+      window.__csvFields = (results.meta && results.meta.fields) || [];
+      const prevCols = detectPrevCols(window.__csvFields);
       rows = results.data
         .map(r => ({
+          comAnt: prevCols.com ? toNumber(r[prevCols.com]) : null,
+          naoComAnt: prevCols.naoCom ? toNumber(r[prevCols.naoCom]) : null,
+          rolAnt: prevCols.rol ? toNumber(r[prevCols.rol]) : null,
           sinodo: (r[COL.sinodo] || "").trim(),
           sigla: (r[COL.sigla] || "").trim(),
           comungantes: toNumber(r[COL.comungantes]),
@@ -1311,6 +1473,13 @@ function loadData(){
       }
 
       render();
+
+      try {
+        renderComparativo(rows, prevCols);
+      } catch (cmpErr) {
+        console.error("Falha ao gerar comparativo:", cmpErr);
+        document.getElementById("cmpContent").innerHTML = '<div class="cmp-warn">Não foi possível gerar o comparativo.</div>';
+      }
 
       try {
         renderCharts(comTotal, totalComungantes, totalNaoComungantes);
