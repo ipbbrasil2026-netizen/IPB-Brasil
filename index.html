@@ -1219,18 +1219,21 @@ function updateComparativo(){
   const pairs = sel.filter(r => r.ok);
   const semDado = sel.length - pairs.length;
 
-  const sum = (k) => pairs.reduce((s, r) => s + r[k], 0);
+  // Cards e gráficos de totais: somam TODOS os sínodos da seleção, cada ano com o que houver (vazio conta como 0)
+  const n = (v) => v === null || v === undefined ? 0 : v;
+  const sum = (k) => sel.reduce((s, r) => s + n(r[k]), 0);
+  const hasAny = sel.some(r => r.comAnt !== null || r.naoComAnt !== null || r.comungantes !== null || r.naoComungantes !== null);
   const T = {
     com: [sum("comAnt"), sum("comungantes")],
-    nao: [sum("naoComAnt"), sum("naoComungantes")],
-    rol: [sum("totAnt"), sum("totAtual")]
+    nao: [sum("naoComAnt"), sum("naoComungantes")]
   };
+  T.rol = [T.com[0] + T.nao[0], T.com[1] + T.nao[1]];
 
   const card = (titulo, [ant, atu]) => `
     <div class="cmp-card"><h3>${titulo}</h3>
-      <div class="row"><span>Ano anterior</span><strong>${pairs.length ? fmt(ant) : NC}</strong></div>
-      <div class="row"><span>Ano atual</span><strong>${pairs.length ? fmt(atu) : NC}</strong></div>
-      ${pairs.length ? deltaHtml(atu, ant) : ""}
+      <div class="row"><span>Ano anterior</span><strong>${hasAny ? fmt(ant) : NC}</strong></div>
+      <div class="row"><span>Ano atual</span><strong>${hasAny ? fmt(atu) : NC}</strong></div>
+      ${hasAny ? deltaHtml(atu, ant) : ""}
     </div>`;
 
   const cell = (v) => v === null ? `<td class="num nc">${NC}</td>` : `<td class="num">${fmt(v)}</td>`;
@@ -1256,7 +1259,7 @@ function updateComparativo(){
       ${card("Não comungantes", T.nao)}
       ${card("Total de membros", T.rol)}
     </div>
-    ${pairs.length ? `
+    ${hasAny ? `
     <div class="chart-grid">
       <div class="chart-card"><h3>Visão geral: anterior × atual</h3><div class="chart-wrap"><canvas id="cmpGeral"></canvas></div></div>
       <div class="chart-card"><h3>Total por região</h3><div class="chart-wrap"><canvas id="cmpRegiao"></canvas></div></div>
@@ -1265,9 +1268,9 @@ function updateComparativo(){
     <div class="cmp-table-wrap"><table class="cmp-table">
       <thead><tr><th>Sínodo</th><th>Sigla</th><th class="num">Total ano anterior</th><th class="num">Total ano atual</th><th class="num">Variação</th><th class="num">%</th></tr></thead>
       <tbody>${trs}</tbody></table></div>
-    <p class="cmp-note">Cards e gráficos somam os sínodos que têm dado nos dois anos${semDado ? " (" + semDado + " marcado(s) como “" + NC + "” na tabela)" : ""}.</p>`;
+    <p class="cmp-note">Cards e gráficos de totais somam todos os sínodos da seleção, cada ano com os dados disponíveis (campo vazio conta como zero). O gráfico de variação por sínodo mostra apenas os que têm dado nos dois anos${semDado ? "; " + semDado + " aparece(m) como “" + NC + "” na tabela" : ""}.</p>`;
 
-  if (!pairs.length) return;
+  if (!hasAny) return;
 
   const dl = (extra) => DATALABELS_OK ? Object.assign({
     color:"#122029", font:{weight:"600", size:10},
@@ -1290,10 +1293,11 @@ function updateComparativo(){
   }));
 
   const reg = {};
-  pairs.forEach(r => {
+  sel.forEach(r => {
     const g = regiaoDe(r.sinodo); if (!g) return;
     reg[g] = reg[g] || [0,0];
-    reg[g][0] += r.totAnt; reg[g][1] += r.totAtual;
+    reg[g][0] += n(r.comAnt) + n(r.naoComAnt);
+    reg[g][1] += n(r.comungantes) + n(r.naoComungantes);
   });
   const regNomes = REGIAO_ORDEM.filter(g => reg[g]);
   cmpCharts.push(new Chart(document.getElementById("cmpRegiao"), {
