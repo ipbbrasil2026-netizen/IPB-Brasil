@@ -404,21 +404,41 @@
   .cmp-warn{background:#fff7e0;border:1px solid var(--gold);padding:14px 18px;font-size:0.9rem;}
   @media (max-width:760px){.cmp-cards{grid-template-columns:1fr;}}
 
-  .cmp-filter{position:relative;margin-bottom:20px;max-width:560px;}
-  .cmp-filter label{display:block;font-size:0.78rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted);margin-bottom:6px;font-weight:600;}
-  .cmp-filter input[type=search]{width:100%;padding:10px 12px;border:1px solid var(--line);background:var(--paper-raise);font:inherit;}
-  .cmp-panel{position:absolute;z-index:20;left:0;right:0;top:100%;background:#fff;border:1px solid var(--line);box-shadow:0 8px 24px rgba(18,32,41,.15);}
+  .cmp-filter{margin-bottom:22px;max-width:720px;}
+  .cmp-regions{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px;}
+  .cmp-regions .lbl{font-size:0.78rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted);font-weight:600;margin-right:2px;}
+  .cmp-pill{font:inherit;font-size:0.85rem;padding:6px 14px;border:1px solid var(--line);background:var(--paper-raise);color:var(--ink);border-radius:999px;cursor:pointer;transition:background .15s,color .15s,border-color .15s;}
+  .cmp-pill:hover{border-color:var(--navy);}
+  .cmp-pill[aria-pressed="true"]{background:var(--navy);border-color:var(--navy);color:#fff;}
+  .cmp-combo{position:relative;}
+  .cmp-field{display:flex;flex-wrap:wrap;align-items:center;gap:6px;min-height:50px;max-height:120px;overflow:auto;padding:7px 84px 7px 42px;border:1.5px solid var(--line);background:#fff;border-radius:10px;cursor:text;transition:border-color .15s,box-shadow .15s;}
+  .cmp-field:focus-within{border-color:var(--navy);box-shadow:0 0 0 3px rgba(31,58,82,.15);}
+  .cmp-ico{position:absolute;left:14px;top:15px;width:18px;height:18px;color:var(--muted);pointer-events:none;}
+  .cmp-field input{flex:1;min-width:150px;border:0;outline:0;background:transparent;font:inherit;font-size:0.95rem;padding:5px 2px;color:var(--ink);}
+  .cmp-tag{display:inline-flex;align-items:center;gap:4px;background:var(--navy);color:#fff;font-size:0.8rem;padding:4px 4px 4px 10px;border-radius:999px;max-width:100%;}
+  .cmp-tag button{background:rgba(255,255,255,.18);border:0;color:#fff;width:18px;height:18px;border-radius:50%;cursor:pointer;line-height:1;font-size:0.85rem;padding:0;}
+  .cmp-tag button:hover{background:rgba(255,255,255,.35);}
+  .cmp-actions{position:absolute;right:8px;top:8px;display:flex;gap:2px;}
+  .cmp-actions button{width:34px;height:34px;border:0;background:transparent;border-radius:8px;cursor:pointer;color:var(--muted);font-size:1rem;}
+  .cmp-actions button:hover{background:var(--paper-raise);color:var(--ink);}
+  .cmp-actions button[hidden]{display:none;}
+  .cmp-panel{position:absolute;z-index:30;left:0;right:0;top:calc(100% + 6px);background:#fff;border:1px solid var(--line);border-radius:10px;box-shadow:0 12px 32px rgba(18,32,41,.18);overflow:hidden;}
   .cmp-panel[hidden]{display:none;}
-  .cmp-panel .tools{display:flex;gap:8px;padding:8px 10px;border-bottom:1px solid var(--line);flex-wrap:wrap;}
-  .cmp-panel .tools button{font:inherit;font-size:0.8rem;padding:4px 10px;border:1px solid var(--line);background:var(--paper-raise);cursor:pointer;}
-  .cmp-list{max-height:260px;overflow:auto;padding:4px 0;}
-  .cmp-list label{display:flex;gap:8px;align-items:center;padding:6px 12px;margin:0;text-transform:none;letter-spacing:0;font-size:0.9rem;color:var(--ink);font-weight:400;cursor:pointer;}
-  .cmp-list label:hover{background:var(--paper-raise);}
-  .cmp-list small{color:var(--muted);margin-left:auto;}
-  .cmp-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;}
-  .cmp-chips span{background:var(--navy);color:#fff;font-size:0.8rem;padding:3px 4px 3px 10px;display:inline-flex;gap:6px;align-items:center;}
-  .cmp-chips button{background:none;border:0;color:#fff;cursor:pointer;font-size:1rem;line-height:1;padding:0 4px;}
-  .cmp-scope{color:var(--muted);font-size:0.85rem;margin-top:8px;}
+  .cmp-panel-head{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 14px;background:var(--paper-raise);border-bottom:1px solid var(--line);font-size:0.82rem;color:var(--muted);}
+  .cmp-panel-head button{font:inherit;font-size:0.82rem;color:var(--navy);background:none;border:0;cursor:pointer;font-weight:600;padding:2px 0;}
+  .cmp-panel-head button:hover{text-decoration:underline;}
+  .cmp-list{list-style:none;margin:0;padding:4px;max-height:300px;overflow:auto;}
+  .cmp-opt{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;cursor:pointer;font-size:0.92rem;}
+  .cmp-opt.active{background:var(--paper-raise);}
+  .cmp-opt .box{flex:none;width:18px;height:18px;border:1.5px solid #b9b39f;border-radius:5px;display:grid;place-items:center;color:#fff;font-size:0.72rem;background:#fff;}
+  .cmp-opt[aria-selected="true"] .box{background:var(--navy);border-color:var(--navy);}
+  .cmp-opt .txt{flex:1;min-width:0;}
+  .cmp-opt .meta{display:block;font-size:0.76rem;color:var(--muted);}
+  .cmp-opt mark{background:#f4dc9a;color:inherit;border-radius:2px;padding:0 1px;}
+  .cmp-opt .badge{flex:none;font-size:0.72rem;color:var(--muted);border:1px dashed var(--line);border-radius:999px;padding:2px 8px;}
+  .cmp-empty{padding:18px;text-align:center;color:var(--muted);font-size:0.9rem;}
+  .cmp-scope{color:var(--muted);font-size:0.85rem;margin-top:10px;}
+  @media (max-width:560px){.cmp-field{padding-right:78px;} .cmp-opt .badge{display:none;}}
   .cmp-table-wrap{max-height:460px;overflow:auto;border:1px solid var(--line);margin-top:18px;}
   .cmp-table{width:100%;border-collapse:collapse;font-size:0.88rem;}
   .cmp-table th{position:sticky;top:0;background:var(--navy-deep);color:#fff;text-align:left;padding:8px 10px;font-weight:600;}
@@ -1166,19 +1186,29 @@ function renderComparativo(allRows, prevCols){
   cmpAll = buildCmpData(allRows);
   cmpSel = new Set();
 
+  const REGS = REGIAO_ORDEM;
   box.innerHTML = `
     <div class="cmp-filter" id="cmpFilter">
-      <label for="cmpSearch">Filtrar e pesquisar sínodos (pode marcar vários)</label>
-      <input type="search" id="cmpSearch" placeholder="Digite para pesquisar um sínodo…" autocomplete="off">
-      <div class="cmp-panel" id="cmpPanel" hidden>
-        <div class="tools">
-          <button type="button" id="cmpMarkVisible">Marcar resultados da busca</button>
-          <button type="button" id="cmpClear">Limpar seleção (todos)</button>
-          <button type="button" id="cmpClose">Fechar</button>
-        </div>
-        <div class="cmp-list" id="cmpList"></div>
+      <div class="cmp-regions" id="cmpRegions">
+        <span class="lbl">Região</span>
+        <button type="button" class="cmp-pill" data-reg="__all">Todas</button>
+        ${REGS.map(g => `<button type="button" class="cmp-pill" data-reg="${g}">${g}</button>`).join("")}
       </div>
-      <div class="cmp-chips" id="cmpChips"></div>
+      <div class="cmp-combo" id="cmpCombo">
+        <svg class="cmp-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+        <div class="cmp-field" id="cmpField">
+          <span id="cmpTags" style="display:contents"></span>
+          <input id="cmpSearch" type="text" role="combobox" aria-expanded="false" aria-controls="cmpList" aria-autocomplete="list" autocomplete="off" placeholder="Pesquisar sínodo ou sigla…">
+        </div>
+        <div class="cmp-actions">
+          <button type="button" id="cmpClearAll" title="Limpar seleção" aria-label="Limpar seleção" hidden>✕</button>
+          <button type="button" id="cmpCaret" title="Abrir lista" aria-label="Abrir lista">▾</button>
+        </div>
+        <div class="cmp-panel" id="cmpPanel" hidden>
+          <div class="cmp-panel-head"><span id="cmpCount"></span><button type="button" id="cmpMarkVisible">Marcar todos os resultados</button></div>
+          <ul class="cmp-list" id="cmpList" role="listbox" aria-multiselectable="true"></ul>
+        </div>
+      </div>
       <div class="cmp-scope" id="cmpScope"></div>
     </div>
     <div id="cmpResult"></div>`;
@@ -1186,49 +1216,122 @@ function renderComparativo(allRows, prevCols){
   const search = document.getElementById("cmpSearch");
   const panel = document.getElementById("cmpPanel");
   const list = document.getElementById("cmpList");
+  const combo = document.getElementById("cmpCombo");
+  let active = -1;
+  let shown = [];
 
+  const norm = (t) => stripAccents(t || "").toLowerCase();
+  const regOf = (r) => regiaoDe(r.sinodo) || "";
   const visibleItems = () => {
-    const q = stripAccents(search.value).toLowerCase().trim();
-    return cmpAll.filter(r => !q || stripAccents(r.sinodo + " " + (r.sigla || "")).toLowerCase().includes(q));
+    const q = norm(search.value).trim();
+    return cmpAll.filter(r => !q || norm(r.sinodo + " " + (r.sigla || "")).includes(q));
   };
-  const renderList = () => {
-    const items = visibleItems();
-    list.innerHTML = items.length ? items.map(r =>
-      `<label><input type="checkbox" data-k="${escapeHtml(r.sinodo)}" ${cmpSel.has(r.sinodo) ? "checked" : ""}>
-        <span>${escapeHtml(r.sinodo)}</span>${r.ok ? "" : "<small>" + NC + "</small>"}</label>`).join("")
-      : '<div style="padding:10px 12px;color:var(--muted)">Nenhum sínodo encontrado.</div>';
+  const hl = (text, q) => {
+    if (!q) return escapeHtml(text);
+    const i = norm(text).indexOf(q);
+    if (i === -1) return escapeHtml(text);
+    return escapeHtml(text.slice(0, i)) + "<mark>" + escapeHtml(text.slice(i, i + q.length)) + "</mark>" + escapeHtml(text.slice(i + q.length));
   };
-  const renderChips = () => {
-    const chips = document.getElementById("cmpChips");
-    chips.innerHTML = [...cmpSel].map(k =>
-      `<span>${escapeHtml(k)}<button type="button" data-rm="${escapeHtml(k)}" aria-label="Remover">×</button></span>`).join("");
-    document.getElementById("cmpScope").textContent = cmpSel.size
-      ? cmpSel.size + " sínodo(s) selecionado(s)"
-      : "Mostrando todos os sínodos (" + cmpAll.length + ")";
+  const setOpen = (v) => {
+    panel.hidden = !v;
+    search.setAttribute("aria-expanded", v ? "true" : "false");
+    document.getElementById("cmpCaret").textContent = v ? "▴" : "▾";
+    if (v) renderList();
   };
-  const refresh = () => { renderList(); renderChips(); updateComparativo(); };
 
-  search.addEventListener("focus", () => { panel.hidden = false; renderList(); });
-  search.addEventListener("input", () => { panel.hidden = false; renderList(); });
-  list.addEventListener("change", e => {
-    const k = e.target.getAttribute("data-k"); if (k === null) return;
-    if (e.target.checked) cmpSel.add(k); else cmpSel.delete(k);
-    renderChips(); updateComparativo();
+  function renderList(){
+    const q = norm(search.value).trim();
+    shown = visibleItems();
+    if (active >= shown.length) active = shown.length - 1;
+    document.getElementById("cmpCount").textContent =
+      shown.length + " resultado(s)" + (cmpSel.size ? " · " + cmpSel.size + " selecionado(s)" : "");
+    document.getElementById("cmpMarkVisible").hidden = shown.length === 0;
+    list.innerHTML = shown.length ? shown.map((r, i) => {
+      const on = cmpSel.has(r.sinodo);
+      return `<li class="cmp-opt${i === active ? " active" : ""}" role="option" id="cmpOpt${i}" data-i="${i}" aria-selected="${on}">
+        <span class="box">${on ? "✓" : ""}</span>
+        <span class="txt">${hl(r.sinodo, q)}<span class="meta">${escapeHtml(r.sigla || "")}${r.sigla && regOf(r) ? " · " : ""}${escapeHtml(regOf(r))}</span></span>
+        ${r.ok ? "" : `<span class="badge">${NC}</span>`}</li>`;
+    }).join("") : '<li class="cmp-empty">Nenhum sínodo encontrado para essa pesquisa.</li>';
+    if (active >= 0) search.setAttribute("aria-activedescendant", "cmpOpt" + active);
+    else search.removeAttribute("aria-activedescendant");
+  }
+
+  function renderTags(){
+    const tags = document.getElementById("cmpTags");
+    const keys = [...cmpSel];
+    const bySin = Object.fromEntries(cmpAll.map(r => [r.sinodo, r]));
+    tags.innerHTML = keys.map(k => {
+      const r = bySin[k]; const label = (r && r.sigla) ? r.sigla + " · " + k.replace(/^S[ií]nodo\s+(d[aeo]s?\s+)?/i, "") : k;
+      return `<span class="cmp-tag" title="${escapeHtml(k)}">${escapeHtml(label)}<button type="button" data-rm="${escapeHtml(k)}" aria-label="Remover ${escapeHtml(k)}">✕</button></span>`;
+    }).join("");
+    document.getElementById("cmpClearAll").hidden = keys.length === 0;
+    document.getElementById("cmpScope").textContent = keys.length
+      ? keys.length + " de " + cmpAll.length + " sínodos selecionados"
+      : "Mostrando todos os " + cmpAll.length + " sínodos";
+    search.placeholder = keys.length ? "Adicionar outro sínodo…" : "Pesquisar sínodo ou sigla…";
+    // pílulas de região
+    document.querySelectorAll("#cmpRegions .cmp-pill").forEach(b => {
+      const g = b.getAttribute("data-reg");
+      let on;
+      if (g === "__all") on = keys.length === 0;
+      else { const m = cmpAll.filter(r => regOf(r) === g); on = m.length > 0 && m.every(r => cmpSel.has(r.sinodo)); }
+      b.setAttribute("aria-pressed", on ? "true" : "false");
+    });
+  }
+
+  const changed = () => { renderTags(); if (!panel.hidden) renderList(); updateComparativo(); };
+  const toggle = (k) => { if (cmpSel.has(k)) cmpSel.delete(k); else cmpSel.add(k); changed(); };
+
+  // --- eventos ---
+  document.getElementById("cmpField").addEventListener("mousedown", e => {
+    if (e.target.closest("[data-rm]")) return;
+    if (e.target !== search){ e.preventDefault(); search.focus(); }
+    setOpen(true);
   });
-  document.getElementById("cmpMarkVisible").addEventListener("click", () => {
-    visibleItems().forEach(r => cmpSel.add(r.sinodo)); refresh();
+  search.addEventListener("focus", () => setOpen(true));
+  search.addEventListener("input", () => { active = search.value.trim() ? 0 : -1; setOpen(true); });
+  search.addEventListener("keydown", e => {
+    if (e.key === "ArrowDown"){ e.preventDefault(); if (panel.hidden) setOpen(true); active = Math.min(shown.length - 1, active + 1); renderList(); scrollActive(); }
+    else if (e.key === "ArrowUp"){ e.preventDefault(); active = Math.max(0, active - 1); renderList(); scrollActive(); }
+    else if (e.key === "Enter"){ e.preventDefault(); if (active >= 0 && shown[active]) toggle(shown[active].sinodo); }
+    else if (e.key === "Escape"){ setOpen(false); search.blur(); }
+    else if (e.key === "Backspace" && !search.value && cmpSel.size){ const last = [...cmpSel].pop(); cmpSel.delete(last); changed(); }
   });
-  document.getElementById("cmpClear").addEventListener("click", () => { cmpSel.clear(); refresh(); });
-  document.getElementById("cmpClose").addEventListener("click", () => { panel.hidden = true; });
-  document.getElementById("cmpChips").addEventListener("click", e => {
+  function scrollActive(){ const el = document.getElementById("cmpOpt" + active); if (el) el.scrollIntoView({ block: "nearest" }); }
+
+  list.addEventListener("mousedown", e => e.preventDefault());   // mantém o foco no campo
+  list.addEventListener("click", e => {
+    const li = e.target.closest(".cmp-opt"); if (!li) return;
+    const r = shown[+li.getAttribute("data-i")]; if (r) toggle(r.sinodo);
+    search.focus();
+  });
+  list.addEventListener("mousemove", e => {
+    const li = e.target.closest(".cmp-opt"); if (!li) return;
+    const i = +li.getAttribute("data-i"); if (i !== active){ active = i; list.querySelectorAll(".cmp-opt").forEach((n, k) => n.classList.toggle("active", k === i)); }
+  });
+  document.getElementById("cmpMarkVisible").addEventListener("mousedown", e => e.preventDefault());
+  document.getElementById("cmpMarkVisible").addEventListener("click", () => { shown.forEach(r => cmpSel.add(r.sinodo)); changed(); search.focus(); });
+  document.getElementById("cmpTags").addEventListener("click", e => {
     const k = e.target.getAttribute("data-rm"); if (k === null) return;
-    cmpSel.delete(k); refresh();
+    cmpSel.delete(k); changed();
   });
-  document.addEventListener("click", e => {
-    if (!document.getElementById("cmpFilter").contains(e.target)) panel.hidden = true;
+  document.getElementById("cmpClearAll").addEventListener("click", () => { cmpSel.clear(); search.value = ""; active = -1; changed(); });
+  document.getElementById("cmpCaret").addEventListener("click", () => { if (panel.hidden){ setOpen(true); search.focus(); } else setOpen(false); });
+  document.getElementById("cmpRegions").addEventListener("click", e => {
+    const b = e.target.closest(".cmp-pill"); if (!b) return;
+    const g = b.getAttribute("data-reg");
+    if (g === "__all") cmpSel.clear();
+    else {
+      const m = cmpAll.filter(r => regOf(r) === g);
+      const all = m.length > 0 && m.every(r => cmpSel.has(r.sinodo));
+      m.forEach(r => all ? cmpSel.delete(r.sinodo) : cmpSel.add(r.sinodo));
+    }
+    changed();
   });
+  document.addEventListener("click", e => { if (!combo.contains(e.target)) setOpen(false); });
 
-  renderChips();
+  renderTags();
   updateComparativo();
 }
 
