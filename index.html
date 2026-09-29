@@ -403,6 +403,29 @@
   .cmp-note{color:var(--muted);font-size:0.85rem;margin:14px 0 0;}
   .cmp-warn{background:#fff7e0;border:1px solid var(--gold);padding:14px 18px;font-size:0.9rem;}
   @media (max-width:760px){.cmp-cards{grid-template-columns:1fr;}}
+
+  .cmp-filter{position:relative;margin-bottom:20px;max-width:560px;}
+  .cmp-filter label{display:block;font-size:0.78rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted);margin-bottom:6px;font-weight:600;}
+  .cmp-filter input[type=search]{width:100%;padding:10px 12px;border:1px solid var(--line);background:var(--paper-raise);font:inherit;}
+  .cmp-panel{position:absolute;z-index:20;left:0;right:0;top:100%;background:#fff;border:1px solid var(--line);box-shadow:0 8px 24px rgba(18,32,41,.15);}
+  .cmp-panel[hidden]{display:none;}
+  .cmp-panel .tools{display:flex;gap:8px;padding:8px 10px;border-bottom:1px solid var(--line);flex-wrap:wrap;}
+  .cmp-panel .tools button{font:inherit;font-size:0.8rem;padding:4px 10px;border:1px solid var(--line);background:var(--paper-raise);cursor:pointer;}
+  .cmp-list{max-height:260px;overflow:auto;padding:4px 0;}
+  .cmp-list label{display:flex;gap:8px;align-items:center;padding:6px 12px;margin:0;text-transform:none;letter-spacing:0;font-size:0.9rem;color:var(--ink);font-weight:400;cursor:pointer;}
+  .cmp-list label:hover{background:var(--paper-raise);}
+  .cmp-list small{color:var(--muted);margin-left:auto;}
+  .cmp-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;}
+  .cmp-chips span{background:var(--navy);color:#fff;font-size:0.8rem;padding:3px 4px 3px 10px;display:inline-flex;gap:6px;align-items:center;}
+  .cmp-chips button{background:none;border:0;color:#fff;cursor:pointer;font-size:1rem;line-height:1;padding:0 4px;}
+  .cmp-scope{color:var(--muted);font-size:0.85rem;margin-top:8px;}
+  .cmp-table-wrap{max-height:460px;overflow:auto;border:1px solid var(--line);margin-top:18px;}
+  .cmp-table{width:100%;border-collapse:collapse;font-size:0.88rem;}
+  .cmp-table th{position:sticky;top:0;background:var(--navy-deep);color:#fff;text-align:left;padding:8px 10px;font-weight:600;}
+  .cmp-table td{padding:7px 10px;border-top:1px solid var(--line);font-variant-numeric:tabular-nums;}
+  .cmp-table td.num,.cmp-table th.num{text-align:right;}
+  .cmp-table .nc{color:var(--muted);font-style:italic;}
+  .cmp-table .up{color:var(--teal);} .cmp-table .down{color:var(--terracotta);}
 </style>
 </head>
 <body>
@@ -497,7 +520,7 @@
 <section class="compare" id="comparativo">
   <div class="wrap">
     <h2>Comparativo: ano atual × ano anterior</h2>
-    <p class="section-lede">Comungantes, não comungantes e total de membros nos dois anos. Total = comungantes + não comungantes, nos dois anos. Considera apenas os sínodos que têm dado nos dois anos, para a comparação ser justa.</p>
+    <p class="section-lede">Comungantes, não comungantes e total de membros nos dois anos. Total = comungantes + não comungantes, nos dois anos. Todos os sínodos aparecem; os que não têm dado catalogado são indicados como “Dados não catalogados”.</p>
     <div id="cmpContent"><p class="cmp-note">Carregando comparativo…</p></div>
   </div>
 </section>
@@ -1093,6 +1116,23 @@ function deltaHtml(atual, ant){
 }
 
 let cmpCharts = [];
+let cmpAll = [];          // todos os sínodos (com status)
+let cmpSel = new Set();   // vazio = todos
+const NC = "Dados não catalogados";
+
+function buildCmpData(allRows){
+  return allRows.map(r => {
+    const completo = r.comungantes !== null && r.comAnt !== null &&
+                     r.naoComungantes !== null && r.naoComAnt !== null &&
+                     (r.comAnt + r.naoComAnt) > 0;
+    return Object.assign({}, r, {
+      ok: completo,
+      totAnt: completo ? r.comAnt + r.naoComAnt : null,
+      totAtual: completo ? r.comungantes + r.naoComungantes : null
+    });
+  }).sort((a, b) => a.sinodo.localeCompare(b.sinodo, "pt-BR"));
+}
+
 function renderComparativo(allRows, prevCols){
   const box = document.getElementById("cmpContent");
   cmpCharts.forEach(c => c.destroy()); cmpCharts = [];
@@ -1103,20 +1143,81 @@ function renderComparativo(allRows, prevCols){
     return;
   }
 
-  const pairs = allRows
-    .filter(r =>
-      r.comungantes !== null && r.comAnt !== null &&
-      r.naoComungantes !== null && r.naoComAnt !== null)
-    .map(r => Object.assign({}, r, {
-      totAnt: r.comAnt + r.naoComAnt,
-      totAtual: r.comungantes + r.naoComungantes
-    }))
-    .filter(r => r.totAnt > 0);
+  cmpAll = buildCmpData(allRows);
+  cmpSel = new Set();
 
-  if (!pairs.length){
-    box.innerHTML = '<div class="cmp-warn">Nenhum sínodo tem dados completos nos dois anos.</div>';
-    return;
-  }
+  box.innerHTML = `
+    <div class="cmp-filter" id="cmpFilter">
+      <label for="cmpSearch">Filtrar e pesquisar sínodos (pode marcar vários)</label>
+      <input type="search" id="cmpSearch" placeholder="Digite para pesquisar um sínodo…" autocomplete="off">
+      <div class="cmp-panel" id="cmpPanel" hidden>
+        <div class="tools">
+          <button type="button" id="cmpMarkVisible">Marcar resultados da busca</button>
+          <button type="button" id="cmpClear">Limpar seleção (todos)</button>
+          <button type="button" id="cmpClose">Fechar</button>
+        </div>
+        <div class="cmp-list" id="cmpList"></div>
+      </div>
+      <div class="cmp-chips" id="cmpChips"></div>
+      <div class="cmp-scope" id="cmpScope"></div>
+    </div>
+    <div id="cmpResult"></div>`;
+
+  const search = document.getElementById("cmpSearch");
+  const panel = document.getElementById("cmpPanel");
+  const list = document.getElementById("cmpList");
+
+  const visibleItems = () => {
+    const q = stripAccents(search.value).toLowerCase().trim();
+    return cmpAll.filter(r => !q || stripAccents(r.sinodo + " " + (r.sigla || "")).toLowerCase().includes(q));
+  };
+  const renderList = () => {
+    const items = visibleItems();
+    list.innerHTML = items.length ? items.map(r =>
+      `<label><input type="checkbox" data-k="${escapeHtml(r.sinodo)}" ${cmpSel.has(r.sinodo) ? "checked" : ""}>
+        <span>${escapeHtml(r.sinodo)}</span>${r.ok ? "" : "<small>" + NC + "</small>"}</label>`).join("")
+      : '<div style="padding:10px 12px;color:var(--muted)">Nenhum sínodo encontrado.</div>';
+  };
+  const renderChips = () => {
+    const chips = document.getElementById("cmpChips");
+    chips.innerHTML = [...cmpSel].map(k =>
+      `<span>${escapeHtml(k)}<button type="button" data-rm="${escapeHtml(k)}" aria-label="Remover">×</button></span>`).join("");
+    document.getElementById("cmpScope").textContent = cmpSel.size
+      ? cmpSel.size + " sínodo(s) selecionado(s)"
+      : "Mostrando todos os sínodos (" + cmpAll.length + ")";
+  };
+  const refresh = () => { renderList(); renderChips(); updateComparativo(); };
+
+  search.addEventListener("focus", () => { panel.hidden = false; renderList(); });
+  search.addEventListener("input", () => { panel.hidden = false; renderList(); });
+  list.addEventListener("change", e => {
+    const k = e.target.getAttribute("data-k"); if (k === null) return;
+    if (e.target.checked) cmpSel.add(k); else cmpSel.delete(k);
+    renderChips(); updateComparativo();
+  });
+  document.getElementById("cmpMarkVisible").addEventListener("click", () => {
+    visibleItems().forEach(r => cmpSel.add(r.sinodo)); refresh();
+  });
+  document.getElementById("cmpClear").addEventListener("click", () => { cmpSel.clear(); refresh(); });
+  document.getElementById("cmpClose").addEventListener("click", () => { panel.hidden = true; });
+  document.getElementById("cmpChips").addEventListener("click", e => {
+    const k = e.target.getAttribute("data-rm"); if (k === null) return;
+    cmpSel.delete(k); refresh();
+  });
+  document.addEventListener("click", e => {
+    if (!document.getElementById("cmpFilter").contains(e.target)) panel.hidden = true;
+  });
+
+  renderChips();
+  updateComparativo();
+}
+
+function updateComparativo(){
+  cmpCharts.forEach(c => c.destroy()); cmpCharts = [];
+  const out = document.getElementById("cmpResult");
+  const sel = cmpSel.size ? cmpAll.filter(r => cmpSel.has(r.sinodo)) : cmpAll;
+  const pairs = sel.filter(r => r.ok);
+  const semDado = sel.length - pairs.length;
 
   const sum = (k) => pairs.reduce((s, r) => s + r[k], 0);
   const T = {
@@ -1127,23 +1228,46 @@ function renderComparativo(allRows, prevCols){
 
   const card = (titulo, [ant, atu]) => `
     <div class="cmp-card"><h3>${titulo}</h3>
-      <div class="row"><span>Ano anterior</span><strong>${fmt(ant)}</strong></div>
-      <div class="row"><span>Ano atual</span><strong>${fmt(atu)}</strong></div>
-      ${deltaHtml(atu, ant)}
+      <div class="row"><span>Ano anterior</span><strong>${pairs.length ? fmt(ant) : NC}</strong></div>
+      <div class="row"><span>Ano atual</span><strong>${pairs.length ? fmt(atu) : NC}</strong></div>
+      ${pairs.length ? deltaHtml(atu, ant) : ""}
     </div>`;
 
-  box.innerHTML = `
+  const cell = (v) => v === null ? `<td class="num nc">${NC}</td>` : `<td class="num">${fmt(v)}</td>`;
+  const trs = sel.map(r => {
+    if (!r.ok){
+      const parc = (r.comungantes !== null || r.naoComungantes !== null) ? fmt((r.comungantes || 0) + (r.naoComungantes || 0)) : null;
+      return `<tr><td>${escapeHtml(r.sinodo)}</td><td>${escapeHtml(r.sigla || "")}</td>
+        <td class="num nc">${NC}</td>${parc === null ? `<td class="num nc">${NC}</td>` : `<td class="num">${parc}</td>`}
+        <td class="num nc">${NC}</td><td class="num nc">${NC}</td></tr>`;
+    }
+    const d = r.totAtual - r.totAnt;
+    const pct = (d / r.totAnt * 100).toFixed(1).replace(".", ",");
+    const cls = d > 0 ? "up" : d < 0 ? "down" : "";
+    const sg = d > 0 ? "+" : d < 0 ? "−" : "";
+    return `<tr><td>${escapeHtml(r.sinodo)}</td><td>${escapeHtml(r.sigla || "")}</td>
+      ${cell(r.totAnt)}${cell(r.totAtual)}
+      <td class="num ${cls}">${sg}${fmt(Math.abs(d))}</td><td class="num ${cls}">${sg}${pct.replace("-","")}%</td></tr>`;
+  }).join("");
+
+  out.innerHTML = `
     <div class="cmp-cards">
       ${card("Comungantes", T.com)}
       ${card("Não comungantes", T.nao)}
       ${card("Total de membros", T.rol)}
     </div>
+    ${pairs.length ? `
     <div class="chart-grid">
       <div class="chart-card"><h3>Visão geral: anterior × atual</h3><div class="chart-wrap"><canvas id="cmpGeral"></canvas></div></div>
       <div class="chart-card"><h3>Total por região</h3><div class="chart-wrap"><canvas id="cmpRegiao"></canvas></div></div>
-      <div class="chart-card wide"><h3>Variação de membros por sínodo (maiores altas e quedas)</h3><div class="chart-wrap"><canvas id="cmpVar"></canvas></div></div>
-    </div>
-    <p class="cmp-note">Base da comparação: ${pairs.length} sínodo(s) com dados completos nos dois anos (de ${allRows.length} no levantamento). Sínodos sem dado no ano anterior (zerado ou em branco) ficam de fora.</p>`;
+      <div class="chart-card wide"><h3>Variação de membros por sínodo</h3><div class="chart-wrap"><canvas id="cmpVar"></canvas></div></div>
+    </div>` : ""}
+    <div class="cmp-table-wrap"><table class="cmp-table">
+      <thead><tr><th>Sínodo</th><th>Sigla</th><th class="num">Total ano anterior</th><th class="num">Total ano atual</th><th class="num">Variação</th><th class="num">%</th></tr></thead>
+      <tbody>${trs}</tbody></table></div>
+    <p class="cmp-note">Cards e gráficos somam os sínodos que têm dado nos dois anos${semDado ? " (" + semDado + " marcado(s) como “" + NC + "” na tabela)" : ""}.</p>`;
+
+  if (!pairs.length) return;
 
   const dl = (extra) => DATALABELS_OK ? Object.assign({
     color:"#122029", font:{weight:"600", size:10},
@@ -1188,13 +1312,13 @@ function renderComparativo(allRows, prevCols){
 
   const vars = pairs.map(r => ({ nome: r.sigla || r.sinodo, d: r.totAtual - r.totAnt }))
                     .filter(v => v.d !== 0).sort((a,b) => b.d - a.d);
-  const sel = vars.length > 16 ? vars.slice(0, 8).concat(vars.slice(-8)) : vars;
+  const selV = vars.length > 16 ? vars.slice(0, 8).concat(vars.slice(-8)) : vars;
   cmpCharts.push(new Chart(document.getElementById("cmpVar"), {
     type: "bar",
     data: {
-      labels: sel.map(v => v.nome),
-      datasets: [{ label: "Variação de membros", data: sel.map(v => v.d),
-        backgroundColor: sel.map(v => v.d >= 0 ? "#3c7268" : "#b15a43") }]
+      labels: selV.map(v => v.nome),
+      datasets: [{ label: "Variação de membros", data: selV.map(v => v.d),
+        backgroundColor: selV.map(v => v.d >= 0 ? "#3c7268" : "#b15a43") }]
     },
     options: { responsive:true, maintainAspectRatio:false, layout:{padding:{top:22, bottom:6}},
       plugins:{ legend:{display:false}, datalabels: dl({anchor:"end", align:"end", clamp:true}) },
