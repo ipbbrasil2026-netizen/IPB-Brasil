@@ -222,9 +222,19 @@
     border-radius:3px;
     color:var(--ink);
   }
-  .toolbar input#search{flex:1 1 220px;min-width:180px;}
+  .toolbar input#search{flex:1 1 auto;min-width:0;}
   .toolbar select:focus, .toolbar input:focus{outline:2px solid var(--navy);outline-offset:1px;}
 
+  .search-box{position:relative;display:flex;flex:1 1 220px;min-width:180px;}
+  .search-box input{width:100%;padding-right:36px !important;}
+  .search-clear{position:absolute;right:4px;top:50%;transform:translateY(-50%);width:28px;height:28px;border:0;background:transparent;border-radius:50%;color:var(--muted);cursor:pointer;font-size:0.9rem;line-height:1;}
+  .search-clear:hover{background:var(--line);color:var(--ink);}
+  .search-clear:focus-visible{outline:2px solid var(--navy);outline-offset:1px;}
+  .search-clear[hidden]{display:none;}
+  .btn-clear{font-family:'IBM Plex Sans',sans-serif;font-size:0.92rem;padding:9px 14px;border:1px solid var(--line);background:var(--paper);color:var(--ink);border-radius:3px;cursor:pointer;}
+  .btn-clear:hover:not(:disabled){border-color:var(--navy);color:var(--navy);}
+  .btn-clear:focus-visible{outline:2px solid var(--navy);outline-offset:1px;}
+  .btn-clear:disabled{opacity:.45;cursor:default;}
   .table-scroll{
     border:1px solid var(--line);border-top:none;
     background:var(--paper-raise);
@@ -437,7 +447,12 @@
   .cmp-opt mark{background:#f4dc9a;color:inherit;border-radius:2px;padding:0 1px;}
   .cmp-opt .badge{flex:none;font-size:0.72rem;color:var(--muted);border:1px dashed var(--line);border-radius:999px;padding:2px 8px;}
   .cmp-empty{padding:18px;text-align:center;color:var(--muted);font-size:0.9rem;}
-  .cmp-scope{color:var(--muted);font-size:0.85rem;margin-top:10px;}
+  .cmp-scope-row{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:6px 14px;margin-top:10px;}
+  .cmp-scope{color:var(--muted);font-size:0.85rem;}
+  .cmp-reset{font:inherit;font-size:0.85rem;font-weight:600;color:var(--navy);background:none;border:0;padding:2px 0;cursor:pointer;}
+  .cmp-reset:hover{text-decoration:underline;}
+  .cmp-reset:focus-visible{outline:2px solid var(--navy);outline-offset:2px;}
+  .cmp-reset[hidden]{display:none;}
   @media (max-width:560px){.cmp-field{padding-right:78px;} .cmp-opt .badge{display:none;}}
   .cmp-table-wrap{border:1px solid var(--line);margin-top:18px;}
   .cmp-table{table-layout:fixed;}
@@ -639,7 +654,10 @@
       <p class="table-hint">Clique em "Ver presbitérios" em qualquer linha para ver os presbitérios e igrejas/congregações vinculados, conforme leitura parcial do PDF do relatório da Tesouraria.</p>
       <div class="toolbar">
         <button id="btnPdf" type="button">⬇ Baixar PDF</button>
-        <input id="search" type="text" placeholder="Buscar sínodo ou sigla…">
+        <div class="search-box">
+          <input id="search" type="text" placeholder="Buscar sínodo ou sigla…">
+          <button type="button" class="search-clear" id="searchClear" title="Limpar busca" aria-label="Limpar busca" hidden>✕</button>
+        </div>
         <select id="filterSituacao">
           <option value="todos">Todas as situações</option>
           <option value="ok">Com total</option>
@@ -653,6 +671,7 @@
           <option value="5000-10000">5.001 a 10.000</option>
           <option value="acima10000">Acima de 10.000</option>
         </select>
+        <button type="button" class="btn-clear" id="btnClearFilters" disabled>Limpar filtros</button>
       </div>
     </div>
     <div class="table-scroll">
@@ -694,7 +713,10 @@
       <div class="ms total"><span>Total (rol atual)</span><strong id="msTotal">-</strong></div>
     </div>
     <div class="modal-toolbar">
-      <input id="modalSearch" type="text" placeholder="Buscar presbitério ou igreja/congregação…">
+      <div class="search-box">
+        <input id="modalSearch" type="text" placeholder="Buscar presbitério ou igreja/congregação…">
+        <button type="button" class="search-clear" id="modalSearchClear" title="Limpar busca" aria-label="Limpar busca" hidden>✕</button>
+      </div>
     </div>
     <div class="modal-body" id="modalBody"></div>
     <p class="modal-note">Leitura parcial do PDF do relatório da Tesouraria, sujeita a conferência. Nomes de igrejas podem conter erros de leitura (OCR). Os números acima são do sínodo (a planilha não traz esses dados por presbitério). Rol separado integra os comungantes; não é somado novamente ao rol atual.</p>
@@ -1085,7 +1107,10 @@ function openPresbModal(sigla, nome, isRefresh){
   document.getElementById("msCom").textContent = rowSin ? fmt(rowSin.comungantes) : "-";
   document.getElementById("msNaoCom").textContent = rowSin ? fmt(rowSin.naoComungantes) : "-";
   document.getElementById("msTotal").textContent = rowSin ? fmt(rowSin.rolAtual) : "-";
-  if (!isRefresh) document.getElementById("modalSearch").value = "";
+  if (!isRefresh){
+    document.getElementById("modalSearch").value = "";
+    document.getElementById("modalSearchClear").hidden = true;
+  }
   const body = document.getElementById("modalBody");
 
   if (presbLoadState === "loading"){
@@ -1131,7 +1156,14 @@ function closePresbModal(){
 }
 
 document.getElementById("modalSearch").addEventListener("input", (e) => {
+  document.getElementById("modalSearchClear").hidden = e.target.value === "";
   if (currentModalEntry) renderModalBody(currentModalEntry, e.target.value);
+});
+document.getElementById("modalSearchClear").addEventListener("click", () => {
+  const inp = document.getElementById("modalSearch");
+  inp.value = ""; document.getElementById("modalSearchClear").hidden = true;
+  if (currentModalEntry) renderModalBody(currentModalEntry, "");
+  inp.focus();
 });
 document.getElementById("modalClose").addEventListener("click", closePresbModal);
 document.getElementById("presbModalOverlay").addEventListener("click", (e) => {
@@ -1231,7 +1263,10 @@ function renderComparativo(allRows, prevCols){
           <ul class="cmp-list" id="cmpList" role="listbox" aria-multiselectable="true"></ul>
         </div>
       </div>
-      <div class="cmp-scope" id="cmpScope"></div>
+      <div class="cmp-scope-row">
+        <div class="cmp-scope" id="cmpScope"></div>
+        <button type="button" class="cmp-reset" id="cmpReset" hidden>Limpar filtros</button>
+      </div>
     </div>
     <div id="cmpResult"></div>`;
 
@@ -1287,7 +1322,9 @@ function renderComparativo(allRows, prevCols){
       const r = bySin[k]; const label = (r && r.sigla) ? r.sigla + " · " + k.replace(/^S[ií]nodo\s+(d[aeo]s?\s+)?/i, "") : k;
       return `<span class="cmp-tag" title="${escapeHtml(k)}">${escapeHtml(label)}<button type="button" data-rm="${escapeHtml(k)}" aria-label="Remover ${escapeHtml(k)}">✕</button></span>`;
     }).join("");
-    document.getElementById("cmpClearAll").hidden = keys.length === 0;
+    const temFiltro = keys.length > 0 || search.value !== "";
+    document.getElementById("cmpClearAll").hidden = !temFiltro;
+    document.getElementById("cmpReset").hidden = !temFiltro;
     document.getElementById("cmpScope").textContent = keys.length
       ? keys.length + " de " + cmpAll.length + " sínodos selecionados"
       : "Mostrando todos os " + cmpAll.length + " sínodos";
@@ -1312,7 +1349,7 @@ function renderComparativo(allRows, prevCols){
     setOpen(true);
   });
   search.addEventListener("focus", () => setOpen(true));
-  search.addEventListener("input", () => { active = search.value.trim() ? 0 : -1; setOpen(true); });
+  search.addEventListener("input", () => { active = search.value.trim() ? 0 : -1; setOpen(true); renderTags(); });
   search.addEventListener("keydown", e => {
     if (e.key === "ArrowDown"){ e.preventDefault(); if (panel.hidden) setOpen(true); active = Math.min(shown.length - 1, active + 1); renderList(); scrollActive(); }
     else if (e.key === "ArrowUp"){ e.preventDefault(); active = Math.max(0, active - 1); renderList(); scrollActive(); }
@@ -1338,7 +1375,9 @@ function renderComparativo(allRows, prevCols){
     const k = e.target.getAttribute("data-rm"); if (k === null) return;
     cmpSel.delete(k); changed();
   });
-  document.getElementById("cmpClearAll").addEventListener("click", () => { cmpSel.clear(); search.value = ""; active = -1; changed(); });
+  const limparCmp = () => { cmpSel.clear(); search.value = ""; active = -1; setOpen(false); changed(); };
+  document.getElementById("cmpClearAll").addEventListener("click", limparCmp);
+  document.getElementById("cmpReset").addEventListener("click", limparCmp);
   document.getElementById("cmpCaret").addEventListener("click", () => { if (panel.hidden){ setOpen(true); search.focus(); } else setOpen(false); });
   document.getElementById("cmpRegions").addEventListener("click", e => {
     const b = e.target.closest(".cmp-pill"); if (!b) return;
@@ -1688,7 +1727,26 @@ document.querySelectorAll("thead th[data-key]").forEach(th => {
   });
 });
 
-function resetPageAndRender(){ currentPage = 1; render(); }
+function updateClearButtons(){
+  const q = document.getElementById("search").value;
+  const ativo = q.trim() !== "" ||
+    document.getElementById("filterSituacao").value !== "todos" ||
+    document.getElementById("filterFaixa").value !== "todas";
+  document.getElementById("searchClear").hidden = q === "";
+  document.getElementById("btnClearFilters").disabled = !ativo;
+}
+function resetPageAndRender(){ currentPage = 1; updateClearButtons(); render(); }
+document.getElementById("searchClear").addEventListener("click", () => {
+  const inp = document.getElementById("search");
+  inp.value = ""; resetPageAndRender(); inp.focus();
+});
+document.getElementById("btnClearFilters").addEventListener("click", () => {
+  document.getElementById("search").value = "";
+  document.getElementById("filterSituacao").value = "todos";
+  document.getElementById("filterFaixa").value = "todas";
+  resetPageAndRender();
+  document.getElementById("search").focus();
+});
 document.getElementById("search").addEventListener("input", resetPageAndRender);
 document.getElementById("filterSituacao").addEventListener("change", resetPageAndRender);
 document.getElementById("filterFaixa").addEventListener("change", resetPageAndRender);
