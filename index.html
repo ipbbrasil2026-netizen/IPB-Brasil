@@ -439,7 +439,21 @@
   .cmp-empty{padding:18px;text-align:center;color:var(--muted);font-size:0.9rem;}
   .cmp-scope{color:var(--muted);font-size:0.85rem;margin-top:10px;}
   @media (max-width:560px){.cmp-field{padding-right:78px;} .cmp-opt .badge{display:none;}}
-  .cmp-table-wrap{max-height:460px;overflow:auto;border:1px solid var(--line);margin-top:18px;}
+  .cmp-table-wrap{border:1px solid var(--line);margin-top:18px;}
+  .cmp-table{table-layout:fixed;}
+  .cmp-table td:first-child{overflow-wrap:anywhere;}
+  .cmp-table th:nth-child(1){width:34%;} .cmp-table th:nth-child(2){width:10%;}
+  .cmp-pager{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 16px;padding:10px 12px;border-top:1px solid var(--line);background:var(--paper-raise);font-size:0.85rem;color:var(--muted);}
+  .cmp-pager-size{display:flex;align-items:center;gap:6px;}
+  .cmp-pager-size select{font:inherit;font-size:0.85rem;padding:4px 6px;border:1px solid var(--line);border-radius:6px;background:#fff;color:var(--ink);}
+  .cmp-pager-nav{display:flex;flex-wrap:wrap;align-items:center;gap:4px;}
+  .cmp-pager-nav button{font:inherit;font-size:0.85rem;min-width:34px;height:34px;padding:0 10px;border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:6px;cursor:pointer;font-variant-numeric:tabular-nums;}
+  .cmp-pager-nav button:hover:not(:disabled){border-color:var(--navy);}
+  .cmp-pager-nav button[aria-current="page"]{background:var(--navy);border-color:var(--navy);color:#fff;}
+  .cmp-pager-nav button:disabled{opacity:.45;cursor:default;}
+  .cmp-pager-nav button:focus-visible,.cmp-pager-size select:focus-visible{outline:2px solid var(--navy);outline-offset:2px;}
+  .cmp-pager-nav .gap{padding:0 4px;}
+  @media (max-width:560px){.cmp-table{font-size:0.8rem;} .cmp-table th,.cmp-table td{padding:6px 6px;} .cmp-table th:nth-child(2),.cmp-table td:nth-child(2){display:none;} .cmp-table th:nth-child(1){width:40%;} .cmp-pager{justify-content:center;}}
   .cmp-table{width:100%;border-collapse:collapse;font-size:0.88rem;}
   .cmp-table th{position:sticky;top:0;background:var(--navy-deep);color:#fff;text-align:left;padding:8px 10px;font-weight:600;}
   .cmp-table td{padding:7px 10px;border-top:1px solid var(--line);font-variant-numeric:tabular-nums;}
@@ -1343,6 +1357,56 @@ function renderComparativo(allRows, prevCols){
   updateComparativo();
 }
 
+/* Paginação da tabela do comparativo */
+let cmpRows = [], cmpPage = 1, cmpPageSize = 10;
+
+function renderCmpPage(){
+  const tbody = document.getElementById("cmpTbody");
+  const pager = document.getElementById("cmpPager");
+  if (!tbody || !pager) return;
+  const total = cmpRows.length;
+  const pages = Math.max(1, Math.ceil(total / cmpPageSize));
+  cmpPage = Math.min(Math.max(1, cmpPage), pages);
+  const ini = (cmpPage - 1) * cmpPageSize;
+  const fim = Math.min(ini + cmpPageSize, total);
+  tbody.innerHTML = total ? cmpRows.slice(ini, fim).join("")
+    : '<tr><td colspan="6" class="nc">Nenhum sínodo na seleção.</td></tr>';
+
+  // Números de página com reticências: 1 … 4 5 6 … 12
+  const nums = [];
+  for (let i = 1; i <= pages; i++){
+    if (i === 1 || i === pages || Math.abs(i - cmpPage) <= 1) nums.push(i);
+    else if (nums[nums.length - 1] !== "…") nums.push("…");
+  }
+  const btn = (label, page, aria, extra = "") =>
+    `<button type="button" data-page="${page}" aria-label="${aria}" ${extra}>${label}</button>`;
+
+  pager.innerHTML = `
+    <div class="cmp-pager-size">
+      <label for="cmpPageSize">Linhas por página</label>
+      <select id="cmpPageSize">
+        ${[10, 20, 50].map(n => `<option value="${n}" ${n === cmpPageSize ? "selected" : ""}>${n}</option>`).join("")}
+      </select>
+    </div>
+    <span aria-live="polite">${total ? `${ini + 1}–${fim} de ${total} sínodos` : "0 sínodos"}</span>
+    <nav class="cmp-pager-nav" aria-label="Paginação da tabela do comparativo">
+      ${btn("‹", cmpPage - 1, "Página anterior", cmpPage === 1 ? "disabled" : "")}
+      ${nums.map(n => n === "…" ? '<span class="gap">…</span>'
+        : btn(n, n, "Página " + n, n === cmpPage ? 'aria-current="page"' : "")).join("")}
+      ${btn("›", cmpPage + 1, "Próxima página", cmpPage === pages ? "disabled" : "")}
+    </nav>`;
+
+  pager.querySelectorAll("button[data-page]").forEach(b => b.addEventListener("click", () => {
+    cmpPage = Number(b.dataset.page);
+    renderCmpPage();
+    const foco = pager.querySelector('button[aria-current="page"]');
+    if (foco) foco.focus();
+  }));
+  pager.querySelector("#cmpPageSize").addEventListener("change", e => {
+    cmpPageSize = Number(e.target.value); cmpPage = 1; renderCmpPage();
+  });
+}
+
 function updateComparativo(){
   cmpCharts.forEach(c => c.destroy()); cmpCharts = [];
   const out = document.getElementById("cmpResult");
@@ -1382,7 +1446,8 @@ function updateComparativo(){
     return `<tr><td>${escapeHtml(r.sinodo)}</td><td>${escapeHtml(r.sigla || "")}</td>
       ${cell(r.totAnt)}${cell(r.totAtual)}
       <td class="num ${cls}">${sg}${fmt(Math.abs(d))}</td><td class="num ${cls}">${sg}${pct.replace("-","")}%</td></tr>`;
-  }).join("");
+  });
+  cmpRows = trs; cmpPage = 1;
 
   out.innerHTML = `
     <div class="cmp-cards">
@@ -1398,9 +1463,11 @@ function updateComparativo(){
     </div>` : ""}
     <div class="cmp-table-wrap"><table class="cmp-table">
       <thead><tr><th>Sínodo</th><th>Sigla</th><th class="num">Total ano anterior</th><th class="num">Total ano atual</th><th class="num">Variação</th><th class="num">%</th></tr></thead>
-      <tbody>${trs}</tbody></table></div>
+      <tbody id="cmpTbody"></tbody></table>
+      <div class="cmp-pager" id="cmpPager"></div></div>
     <p class="cmp-note">${semDado ? "<strong>" + semDado + "</strong> sínodo(s) da seleção sem dados catalogados (indicados na tabela). " : ""}O gráfico de variação mostra apenas sínodos com dados nos dois anos.</p>`;
 
+  renderCmpPage();
   if (!hasAny) return;
 
   const dl = (extra) => DATALABELS_OK ? Object.assign({
