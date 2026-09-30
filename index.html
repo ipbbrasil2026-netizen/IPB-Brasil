@@ -446,6 +446,12 @@
   .cmp-table td.num,.cmp-table th.num{text-align:right;}
   .cmp-table .nc{color:var(--muted);font-style:italic;}
   .cmp-table .up{color:var(--teal);} .cmp-table .down{color:var(--terracotta);}
+  .cmp-how{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:0 0 24px;padding:0;list-style:none;}
+  .cmp-how li{background:var(--paper-raise);border-left:3px solid var(--gold);padding:12px 14px;font-size:0.86rem;color:#4a4536;line-height:1.45;}
+  .cmp-how li:nth-child(2){border-left-color:var(--teal);}
+  .cmp-how li:nth-child(3){border-left-color:var(--navy);}
+  .cmp-how strong{display:block;color:var(--ink);font-size:0.78rem;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px;}
+  @media (max-width:760px){.cmp-how{grid-template-columns:1fr;}}
 </style>
 </head>
 <body>
@@ -540,7 +546,12 @@
 <section class="compare" id="comparativo">
   <div class="wrap">
     <h2>Comparativo: ano atual × ano anterior</h2>
-    <p class="section-lede">Comungantes, não comungantes e total de membros nos dois anos. Total = comungantes + não comungantes, nos dois anos. Todos os sínodos aparecem; os que não têm dado catalogado são indicados como “Dados não catalogados”.</p>
+    <p class="section-lede">Compare o rol de membros do ano atual com o do ano anterior, no conjunto da IPB, por região ou por sínodo.</p>
+    <ul class="cmp-how">
+      <li><strong>Como o total é calculado</strong>Comungantes + não comungantes, nos dois anos.</li>
+      <li><strong>Sínodos sem dados</strong>Aparecem na tabela como “Dados não catalogados”. Nas somas, cada ano conta o que estiver preenchido.</li>
+      <li><strong>Como filtrar</strong>Escolha uma região ou pesquise sínodos abaixo. Sem seleção, todos são mostrados.</li>
+    </ul>
     <div id="cmpContent"><p class="cmp-note">Carregando comparativo…</p></div>
   </div>
 </section>
@@ -1388,7 +1399,7 @@ function updateComparativo(){
     <div class="cmp-table-wrap"><table class="cmp-table">
       <thead><tr><th>Sínodo</th><th>Sigla</th><th class="num">Total ano anterior</th><th class="num">Total ano atual</th><th class="num">Variação</th><th class="num">%</th></tr></thead>
       <tbody>${trs}</tbody></table></div>
-    <p class="cmp-note">Cards e gráficos de totais somam todos os sínodos da seleção, cada ano com os dados disponíveis (campo vazio conta como zero). O total, nos dois anos, é comungantes + não comungantes. O gráfico de variação por sínodo mostra apenas os que têm dado nos dois anos${semDado ? "; " + semDado + " aparece(m) como “" + NC + "” na tabela" : ""}.</p>`;
+    <p class="cmp-note">${semDado ? "<strong>" + semDado + "</strong> sínodo(s) da seleção sem dados catalogados (indicados na tabela). " : ""}O gráfico de variação mostra apenas sínodos com dados nos dois anos.</p>`;
 
   if (!hasAny) return;
 
