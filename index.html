@@ -401,21 +401,6 @@
   .cmp-card .delta small{font-family:'IBM Plex Sans',sans-serif;font-size:0.8rem;color:var(--muted);margin-left:6px;}
   .delta.up{color:var(--teal);} .delta.down{color:var(--terracotta);} .delta.flat{color:var(--muted);}
   .cmp-note{color:var(--muted);font-size:0.85rem;margin:14px 0 0;}
-  .cmp-legend{
-    display:flex;flex-wrap:wrap;gap:10px 22px;align-items:center;
-    margin:2px 0 26px;padding:14px 18px;
-    background:var(--paper-raise);border:1px solid var(--line);border-radius:10px;
-    max-width:720px;
-  }
-  .cmp-legend-item{display:flex;align-items:baseline;gap:8px;font-size:0.88rem;}
-  .cmp-legend-label{font-weight:600;color:var(--navy-deep);white-space:nowrap;}
-  .cmp-legend-formula{
-    font-family:'IBM Plex Sans',sans-serif;color:var(--ink);
-    background:#f2ede0;padding:2px 9px;border-radius:6px;font-size:0.85rem;
-    white-space:nowrap;
-  }
-  .cmp-legend-note{flex-basis:100%;color:var(--muted);font-size:0.83rem;border-top:1px solid var(--line);padding-top:10px;margin-top:2px;}
-  .cmp-legend-nc{font-style:italic;color:var(--terracotta);}
   .cmp-warn{background:#fff7e0;border:1px solid var(--gold);padding:14px 18px;font-size:0.9rem;}
   @media (max-width:760px){.cmp-cards{grid-template-columns:1fr;}}
 
@@ -555,18 +540,7 @@
 <section class="compare" id="comparativo">
   <div class="wrap">
     <h2>Comparativo: ano atual × ano anterior</h2>
-    <p class="section-lede">Comungantes, não comungantes e total de membros nos dois anos, sínodo a sínodo.</p>
-    <div class="cmp-legend">
-      <div class="cmp-legend-item">
-        <span class="cmp-legend-label">Total do ano atual</span>
-        <span class="cmp-legend-formula">Rol Atual T</span>
-      </div>
-      <div class="cmp-legend-item">
-        <span class="cmp-legend-label">Total do ano anterior</span>
-        <span class="cmp-legend-formula">Comungantes + Não comungantes</span>
-      </div>
-      <p class="cmp-legend-note">Todos os sínodos aparecem na lista. Os que não têm dado catalogado são indicados como <span class="cmp-legend-nc">"Dados não catalogados"</span>.</p>
-    </div>
+    <p class="section-lede">Comungantes, não comungantes e total de membros nos dois anos. Total = comungantes + não comungantes, nos dois anos. Todos os sínodos aparecem; os que não têm dado catalogado são indicados como “Dados não catalogados”.</p>
     <div id="cmpContent"><p class="cmp-note">Carregando comparativo…</p></div>
   </div>
 </section>
@@ -1183,12 +1157,9 @@ function buildCmpData(allRows){
     const completo = r.comungantes !== null && r.comAnt !== null &&
                      r.naoComungantes !== null && r.naoComAnt !== null &&
                      (r.comAnt + r.naoComAnt) > 0;
-    // Total do ano atual = "Rol Atual T" da planilha (mesmo total do topo da página);
-    // se vier vazio, usa comungantes + não comungantes.
-    const pe = presbDataLoaded ? findPresbEntry(r.sigla, r.sinodo) : null;
-    const presbRol = pe && pe.rolAtual !== undefined ? pe.rolAtual : null;
-    const curTot = r.rolAtual !== null ? r.rolAtual
-      : (r.comungantes !== null || r.naoComungantes !== null ? (r.comungantes || 0) + (r.naoComungantes || 0) : presbRol);
+    // Total do ano atual = comungantes + não comungantes (mesma regra do ano anterior)
+    const curTot = (r.comungantes !== null || r.naoComungantes !== null)
+      ? (r.comungantes || 0) + (r.naoComungantes || 0) : null;
     return Object.assign({}, r, {
       ok: completo,
       curTot: curTot,
@@ -1376,7 +1347,7 @@ function updateComparativo(){
     com: [sum("comAnt"), sum("comungantes")],
     nao: [sum("naoComAnt"), sum("naoComungantes")]
   };
-  T.rol = [T.com[0] + T.nao[0], sum("curTot")];
+  T.rol = [T.com[0] + T.nao[0], T.com[1] + T.nao[1]];
 
   const card = (titulo, [ant, atu]) => `
     <div class="cmp-card"><h3>${titulo}</h3>
@@ -1417,7 +1388,7 @@ function updateComparativo(){
     <div class="cmp-table-wrap"><table class="cmp-table">
       <thead><tr><th>Sínodo</th><th>Sigla</th><th class="num">Total ano anterior</th><th class="num">Total ano atual</th><th class="num">Variação</th><th class="num">%</th></tr></thead>
       <tbody>${trs}</tbody></table></div>
-    <p class="cmp-note">Cards e gráficos de totais somam todos os sínodos da seleção, cada ano com os dados disponíveis (campo vazio conta como zero). O total do ano atual é o “Rol Atual T” da planilha (quando o sínodo não tem esse dado na aba principal, usa o “Rol atual do sínodo” da aba de presbitérios); o do ano anterior é comungantes + não comungantes. O gráfico de variação por sínodo mostra apenas os que têm dado nos dois anos${semDado ? "; " + semDado + " aparece(m) como “" + NC + "” na tabela" : ""}.</p>`;
+    <p class="cmp-note">Cards e gráficos de totais somam todos os sínodos da seleção, cada ano com os dados disponíveis (campo vazio conta como zero). O total, nos dois anos, é comungantes + não comungantes. O gráfico de variação por sínodo mostra apenas os que têm dado nos dois anos${semDado ? "; " + semDado + " aparece(m) como “" + NC + "” na tabela" : ""}.</p>`;
 
   if (!hasAny) return;
 
